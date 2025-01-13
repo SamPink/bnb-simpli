@@ -1,9 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SendHorizontal } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { sendChatMessage } from "@/services/chatService";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ChatInputProps {
   onSendMessage: (message: string, response: string) => void;
@@ -12,18 +13,25 @@ interface ChatInputProps {
 export const ChatInput = ({ onSendMessage }: ChatInputProps) => {
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Get the current user's ID when component mounts
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        setUserId(user.id);
+      }
+    });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim()) return;
+    if (!message.trim() || !userId) return;
 
     setIsLoading(true);
     try {
-      // TODO: In a real app, these would come from your auth context
-      const userId = "user123";
-      const runId = "session123";
-      
+      const runId = crypto.randomUUID(); // Generate a unique session ID
       const response = await sendChatMessage(message, userId, runId);
       onSendMessage(message, response.response);
       setMessage("");
@@ -46,9 +54,9 @@ export const ChatInput = ({ onSendMessage }: ChatInputProps) => {
         onChange={(e) => setMessage(e.target.value)}
         placeholder="Enter Text"
         className="flex-1 bg-muted"
-        disabled={isLoading}
+        disabled={isLoading || !userId}
       />
-      <Button type="submit" size="icon" disabled={isLoading}>
+      <Button type="submit" size="icon" disabled={isLoading || !userId}>
         <SendHorizontal className="h-4 w-4" />
       </Button>
     </form>

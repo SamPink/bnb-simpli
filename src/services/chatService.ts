@@ -60,6 +60,28 @@ export const getChatSessions = async (userId: string) => {
   return data;
 };
 
+const isValidSource = (source: any): source is Source => {
+  return (
+    typeof source === 'object' &&
+    typeof source.document === 'string' &&
+    typeof source.page === 'number' &&
+    typeof source.paragraph === 'number' &&
+    typeof source.text === 'string' &&
+    typeof source.metadata === 'object' &&
+    typeof source.metadata.size === 'number' &&
+    typeof source.metadata.last_modified === 'string' &&
+    typeof source.metadata.file_type === 'string'
+  );
+};
+
+const validateSources = (sources: Json | null): Source[] => {
+  if (!sources || !Array.isArray(sources)) {
+    return [];
+  }
+  
+  return sources.filter(isValidSource);
+};
+
 export const getChatHistory = async (sessionId: string, userId: string): Promise<ChatMessage[]> => {
   console.log('Fetching chat history for session:', sessionId);
   const { data, error } = await supabase
@@ -78,7 +100,7 @@ export const getChatHistory = async (sessionId: string, userId: string): Promise
   return data.map((msg: any) => ({
     content: msg.content,
     role: msg.role,
-    sources: msg.sources as Source[] || [],
+    sources: validateSources(msg.sources),
     pdf_path: msg.pdf_path
   }));
 };

@@ -12,25 +12,35 @@ const AuthCallback = () => {
         console.log('Handling auth callback...');
         const { searchParams } = new URL(window.location.href);
         const code = searchParams.get('code');
+        const error = searchParams.get('error');
+        const error_description = searchParams.get('error_description');
         
-        if (code) {
-          console.log('Code found, exchanging for session...');
-          const { error } = await supabase.auth.exchangeCodeForSession(code);
-          
-          if (error) {
-            console.error('Error exchanging code for session:', error);
-            toast.error('Authentication failed. Please try again.');
-            navigate('/login');
-            return;
-          }
+        if (error || error_description) {
+          console.error('Auth error:', error, error_description);
+          toast.error(error_description || 'Authentication failed. Please try again.');
+          navigate('/login');
+          return;
+        }
 
-          console.log('Successfully exchanged code for session');
-          navigate('/');
-        } else {
+        if (!code) {
           console.error('No code found in URL');
           toast.error('Authentication failed. Please try again.');
           navigate('/login');
+          return;
         }
+
+        console.log('Code found, exchanging for session...');
+        const { error: sessionError } = await supabase.auth.exchangeCodeForSession(code);
+        
+        if (sessionError) {
+          console.error('Error exchanging code for session:', sessionError);
+          toast.error('Authentication failed. Please try again.');
+          navigate('/login');
+          return;
+        }
+
+        console.log('Successfully exchanged code for session');
+        navigate('/');
       } catch (error) {
         console.error('Error handling auth callback:', error);
         toast.error('Authentication failed. Please try again.');

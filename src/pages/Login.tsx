@@ -2,37 +2,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
 
 const Login = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         if (session) {
-          try {
-            // Exchange the token with our backend
-            const response = await fetch('/api/auth/exchange', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                access_token: session.access_token,
-              }),
-            });
-
-            if (!response.ok) {
-              throw new Error('Failed to exchange token');
-            }
-
-            navigate("/");
-          } catch (error) {
-            console.error('Token exchange error:', error);
-            toast.error('Authentication failed. Please try again.');
-            await supabase.auth.signOut();
-          }
+          navigate("/");
         }
       }
     );
@@ -41,17 +19,15 @@ const Login = () => {
   }, [navigate]);
 
   const signInWithAzure = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'azure',
       options: {
         scopes: 'email offline_access',
-        redirectTo: `${window.location.origin}/auth/callback`,
       },
     });
 
     if (error) {
       console.error('Azure sign in error:', error);
-      toast.error('Failed to sign in with Azure. Please try again.');
     }
   };
 

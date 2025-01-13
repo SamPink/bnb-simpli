@@ -29,12 +29,11 @@ interface ChatSession {
 }
 
 const API_BASE_URL = 'https://bnb.gentlesand-b0965d81.westeurope.azurecontainerapps.io';
-const API_CREDENTIALS = btoa('testuser:testpassword');
 
 const API_HEADERS = {
   'accept': 'application/json',
   'Content-Type': 'application/json',
-  'Authorization': `Basic ${API_CREDENTIALS}`,
+  'Authorization': 'Bearer testuser',
   'ngrok-skip-browser-warning': '1'
 };
 

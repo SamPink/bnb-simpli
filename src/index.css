@@ -45,6 +45,55 @@
   }
 }
 
+/* Custom prose styles for markdown content */
+.prose {
+  @apply text-foreground;
+}
+
+.prose h1, .prose h2, .prose h3, .prose h4 {
+  @apply text-foreground font-semibold mb-2;
+}
+
+.prose h1 {
+  @apply text-2xl;
+}
+
+.prose h2 {
+  @apply text-xl;
+}
+
+.prose h3 {
+  @apply text-lg;
+}
+
+.prose ul {
+  @apply my-2 list-disc list-inside;
+}
+
+.prose ol {
+  @apply my-2 list-decimal list-inside;
+}
+
+.prose li {
+  @apply my-1;
+}
+
+.prose code {
+  @apply bg-muted px-1.5 py-0.5 rounded text-sm font-mono;
+}
+
+.prose pre {
+  @apply bg-muted p-4 rounded-lg my-2 overflow-x-auto;
+}
+
+.prose blockquote {
+  @apply border-l-4 border-primary pl-4 my-2 italic;
+}
+
+.prose a {
+  @apply text-primary hover:underline;
+}
+
 .chat-bubble {
   @apply px-4 py-2 rounded-lg max-w-[80%] break-words;
 }

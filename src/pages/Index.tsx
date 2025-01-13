@@ -9,18 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { getChatHistory } from "@/services/chatService";
 import { useToast } from "@/hooks/use-toast";
-
-interface Source {
-  document: string;
-  page: number;
-  paragraph: number;
-  text: string;
-  metadata: {
-    size: number;
-    last_modified: string;
-    file_type: string;
-  };
-}
+import { Source } from "@/services/chatService";
 
 interface Message {
   content: string;
@@ -66,17 +55,14 @@ const Index = () => {
       const history = await getChatHistory(sessionId, userId);
       console.log('Received chat history:', history);
       
-      const formattedMessages: Message[] = history.map(msg => {
-        console.log('Formatting message:', msg);
-        return {
-          content: msg.content,
-          isUser: msg.role === 'user',
-          sources: Array.isArray(msg.sources) ? msg.sources : [],
-          userId: userId,
-          runId: sessionId,
-          pdfPath: msg.pdf_path || null
-        };
-      });
+      const formattedMessages: Message[] = history.map(msg => ({
+        content: msg.content,
+        isUser: msg.role === 'user',
+        sources: msg.sources || [],
+        userId: userId,
+        runId: sessionId,
+        pdfPath: msg.pdf_path
+      }));
       
       console.log('Formatted messages:', formattedMessages);
       setMessages(formattedMessages);

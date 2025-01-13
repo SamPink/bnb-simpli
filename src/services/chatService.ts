@@ -1,25 +1,46 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Json } from "@/integrations/supabase/types";
 
-interface ChatMessage {
+export interface Source {
+  document: string;
+  page: number;
+  paragraph: number;
+  text: string;
+  metadata: {
+    size: number;
+    last_modified: string;
+    file_type: string;
+  };
+}
+
+export interface ChatMessage {
   content: string;
   role: string;
-  sources?: Json;
+  sources?: Source[];
   pdf_path?: string | null;
 }
 
 export const sendChatMessage = async (message: string, userId: string, runId: string) => {
+  console.log('Sending chat message:', { message, userId, runId });
+  
   const { data, error } = await supabase
     .from('messages')
     .insert({
       content: message,
       role: 'user',
-      session_id: runId
+      session_id: runId,
+      sources: null,
+      pdf_path: null
     })
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    console.error('Error sending message:', error);
+    throw error;
+  }
+  
+  console.log('Message sent successfully:', data);
   return data;
 };
 
@@ -30,7 +51,11 @@ export const getChatSessions = async (userId: string) => {
     .select('*')
     .order('created_at', { ascending: false });
 
-  if (error) throw error;
+  if (error) {
+    console.error('Error fetching chat sessions:', error);
+    throw error;
+  }
+  
   console.log('Retrieved chat sessions:', data);
   return data;
 };
@@ -43,13 +68,17 @@ export const getChatHistory = async (sessionId: string, userId: string): Promise
     .eq('session_id', sessionId)
     .order('created_at', { ascending: true });
 
-  if (error) throw error;
+  if (error) {
+    console.error('Error fetching chat history:', error);
+    throw error;
+  }
   
   console.log('Raw chat history data:', data);
+  
   return data.map((msg: any) => ({
     content: msg.content,
     role: msg.role,
-    sources: msg.sources,
+    sources: msg.sources as Source[] || [],
     pdf_path: msg.pdf_path
   }));
 };

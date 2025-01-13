@@ -5,19 +5,7 @@ import { useState, useEffect } from "react";
 import { sendChatMessage } from "@/services/chatService";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Json } from "@/integrations/supabase/types";
-
-interface Source {
-  document: string;
-  page: number;
-  paragraph: number;
-  text: string;
-  metadata: {
-    size: number;
-    last_modified: string;
-    file_type: string;
-  };
-}
+import { Source } from "@/services/chatService";
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
@@ -56,7 +44,7 @@ export const ChatInput = ({ onSendMessage, onResponse, setIsTyping }: ChatInputP
       // Add AI response after it's received
       onResponse(
         response.content,
-        (response.sources as Source[]) || [],
+        response.sources as Source[] || [],
         runId,
         response.pdf_path
       );

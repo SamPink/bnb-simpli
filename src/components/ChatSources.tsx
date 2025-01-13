@@ -82,7 +82,7 @@ export const ChatSources = ({ sources, userId, runId, pdfPath }: ChatSourcesProp
               View Highlighted PDF
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="w-[90%] sm:w-[540px] overflow-y-auto">
+          <SheetContent side="right" className="w-[95%] sm:w-[800px] overflow-y-auto">
             {pdfBlob && (
               <Document
                 file={URL.createObjectURL(pdfBlob)}
@@ -94,7 +94,7 @@ export const ChatSources = ({ sources, userId, runId, pdfPath }: ChatSourcesProp
                     key={`page_${index + 1}`}
                     pageNumber={index + 1}
                     className="mb-4"
-                    width={Math.min(window.innerWidth * 0.8, 540)}
+                    width={Math.min(window.innerWidth * 0.9, 800)}
                   />
                 ))}
               </Document>

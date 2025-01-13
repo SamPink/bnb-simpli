@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { ChatMessage } from "@/components/ChatMessage";
 import { ChatInput } from "@/components/ChatInput";
 import { ChatSidebar } from "@/components/ChatSidebar";
+import { TypingIndicator } from "@/components/TypingIndicator";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,6 +39,7 @@ const Index = () => {
   ]);
   const [userId, setUserId] = useState<string | null>(null);
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
+  const [isTyping, setIsTyping] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -73,7 +75,7 @@ const Index = () => {
     }
   };
 
-  const handleSendMessage = (
+  const handleSendMessage = async (
     userMessage: string, 
     apiResponse: string, 
     sources: Source[] = [], 
@@ -82,18 +84,26 @@ const Index = () => {
   ) => {
     if (!userId) return;
 
-    setMessages((prev) => [
-      ...prev,
-      { content: userMessage, isUser: true },
-      { 
-        content: apiResponse, 
-        isUser: false, 
-        sources, 
-        userId, 
-        runId,
-        pdfPath
-      }
-    ]);
+    // Immediately add user message
+    setMessages(prev => [...prev, { content: userMessage, isUser: true }]);
+    setIsTyping(true);
+
+    try {
+      // Add AI response after it's received
+      setMessages(prev => [
+        ...prev,
+        { 
+          content: apiResponse, 
+          isUser: false, 
+          sources, 
+          userId, 
+          runId,
+          pdfPath
+        }
+      ]);
+    } finally {
+      setIsTyping(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -126,6 +136,7 @@ const Index = () => {
           {messages.map((message, index) => (
             <ChatMessage key={index} {...message} />
           ))}
+          {isTyping && <TypingIndicator />}
         </div>
         
         <ChatInput onSendMessage={handleSendMessage} />

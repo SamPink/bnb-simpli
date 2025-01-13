@@ -25,7 +25,7 @@ const Login = () => {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'azure',
       options: {
-        scopes: 'email',
+        scopes: 'email offline_access',
       },
     });
 

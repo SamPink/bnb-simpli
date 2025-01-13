@@ -17,7 +17,6 @@ async function getAuthHeaders() {
   return {
     'Authorization': `Bearer ${session.access_token}`,
     'Content-Type': 'application/json',
-    'ngrok-skip-browser-warning': '1'
   };
 }
 

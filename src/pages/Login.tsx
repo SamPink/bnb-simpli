@@ -10,15 +10,13 @@ const Login = () => {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session);
         if (session) {
           try {
-            console.log('Exchanging token with backend...');
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/exchange`, {
+            // Exchange the token with our backend
+            const response = await fetch('/api/auth/exchange', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-                'ngrok-skip-browser-warning': '1'
               },
               body: JSON.stringify({
                 access_token: session.access_token,
@@ -29,7 +27,6 @@ const Login = () => {
               throw new Error('Failed to exchange token');
             }
 
-            console.log('Token exchange successful');
             navigate("/");
           } catch (error) {
             console.error('Token exchange error:', error);
@@ -44,29 +41,17 @@ const Login = () => {
   }, [navigate]);
 
   const signInWithAzure = async () => {
-    try {
-      console.log('Initiating Azure sign in...');
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'azure',
-        options: {
-          scopes: 'email offline_access',
-          redirectTo: `${window.location.origin}/auth/callback`,
-          queryParams: {
-            prompt: 'login'
-          }
-        },
-      });
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'azure',
+      options: {
+        scopes: 'email offline_access',
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
 
-      if (error) {
-        console.error('Azure sign in error:', error);
-        toast.error('Failed to sign in with Azure. Please try again.');
-        return;
-      }
-
-      console.log('Sign in initiated:', data);
-    } catch (error) {
-      console.error('Unexpected error during sign in:', error);
-      toast.error('An unexpected error occurred. Please try again.');
+    if (error) {
+      console.error('Azure sign in error:', error);
+      toast.error('Failed to sign in with Azure. Please try again.');
     }
   };
 

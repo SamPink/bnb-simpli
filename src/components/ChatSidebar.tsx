@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, HelpCircle, Settings, Users } from "lucide-react";
+import { MessageSquare, HelpCircle, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getChatSessions } from "@/services/chatService";
 import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
 
 interface ChatSession {
   session_id: string;
@@ -49,11 +50,11 @@ export const ChatSidebar = ({ onChatSelect, selectedChat }: ChatSidebarProps) =>
   };
 
   return (
-    <div className="w-80 border-r border-border bg-card flex flex-col h-full">
+    <div className="w-80 border-r border-border bg-[#1C2127] flex flex-col h-full">
       <div className="p-6 border-b border-border">
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold">Demo Instructions</h2>
-          <p className="text-sm text-muted-foreground">
+          <h2 className="text-xl font-semibold text-white">Demo Instructions</h2>
+          <p className="text-sm text-gray-400">
             This demo version provides an early showcase of the Brown & Brown Support Desk Agent.
           </p>
         </div>
@@ -62,17 +63,26 @@ export const ChatSidebar = ({ onChatSelect, selectedChat }: ChatSidebarProps) =>
       <div className="flex-1 overflow-y-auto p-6">
         <div className="space-y-6">
           <div>
-            <h3 className="text-sm font-medium mb-2">Quick Access</h3>
+            <h3 className="text-sm font-medium mb-2 text-white">Quick Access</h3>
             <div className="space-y-1">
-              <Button variant="ghost" className="w-full justify-start gap-2">
-                <MessageSquare className="h-4 w-4" />
-                All Chats
-              </Button>
-              <Button variant="ghost" className="w-full justify-start gap-2">
+              <div className="space-y-1">
+                {chatSessions.map((session) => (
+                  <Button
+                    key={session.session_id}
+                    variant={selectedChat === session.session_id ? "secondary" : "ghost"}
+                    className="w-full justify-start gap-2 text-gray-300 hover:text-white"
+                    onClick={() => onChatSelect?.(session.session_id)}
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    Chat {format(new Date(session.created_at), 'MMM d, yyyy')}
+                  </Button>
+                ))}
+              </div>
+              <Button variant="ghost" className="w-full justify-start gap-2 text-gray-300 hover:text-white">
                 <HelpCircle className="h-4 w-4" />
                 Help & Support
               </Button>
-              <Button variant="ghost" className="w-full justify-start gap-2">
+              <Button variant="ghost" className="w-full justify-start gap-2 text-gray-300 hover:text-white">
                 <Settings className="h-4 w-4" />
                 Settings
               </Button>
@@ -80,8 +90,8 @@ export const ChatSidebar = ({ onChatSelect, selectedChat }: ChatSidebarProps) =>
           </div>
 
           <div>
-            <h3 className="text-sm font-medium mb-2">Full Version Features</h3>
-            <div className="space-y-2 text-sm text-muted-foreground">
+            <h3 className="text-sm font-medium mb-2 text-white">Full Version Features</h3>
+            <div className="space-y-2 text-sm text-gray-400">
               <p>• Access to all chats and historical interactions</p>
               <p>• Help and Support pages for easy navigation</p>
               <p>• User account settings with profile management</p>
@@ -93,12 +103,13 @@ export const ChatSidebar = ({ onChatSelect, selectedChat }: ChatSidebarProps) =>
 
       <div className="p-6 border-t border-border mt-auto">
         <div className="flex items-center gap-2 mb-2">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <span className="text-primary-foreground font-bold">S</span>
-          </div>
-          <span className="font-semibold">Simpli</span>
+          <img 
+            src="https://brownandbrown.simpliautomation.com/assets/SimpliLogo.svg"
+            alt="Simpli Logo"
+            className="h-8 w-8"
+          />
         </div>
-        <p className="text-sm text-muted-foreground">© 2024 Simpli</p>
+        <p className="text-sm text-gray-400">© 2024 Simpli</p>
       </div>
     </div>
   );

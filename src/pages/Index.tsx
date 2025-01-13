@@ -69,6 +69,10 @@ const Index = () => {
       const formattedMessages: Message[] = history.map(msg => ({
         content: msg.content,
         isUser: msg.role === 'user',
+        sources: msg.sources || [],
+        userId: userId,
+        runId: sessionId,
+        pdfPath: msg.pdf_path || null
       }));
       
       setMessages(formattedMessages);

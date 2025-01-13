@@ -19,6 +19,8 @@ interface ChatResponse {
 interface ChatHistoryMessage {
   role: 'user' | 'assistant';
   content: string;
+  sources?: Source[];
+  pdf_path?: string | null;
 }
 
 interface ChatSession {

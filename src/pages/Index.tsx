@@ -5,11 +5,42 @@ import { ChatSidebar } from "@/components/ChatSidebar";
 import { Button } from "@/components/ui/button";
 import { MessageSquare } from "lucide-react";
 
+interface Source {
+  document: string;
+  page: number;
+  paragraph: number;
+  text: string;
+  metadata: {
+    size: number;
+    last_modified: string;
+    file_type: string;
+  };
+}
+
+interface Message {
+  content: string;
+  isUser: boolean;
+  sources?: Source[];
+  runId?: string;
+  pdfPath?: string | null;
+}
+
 const Index = () => {
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isTyping, setIsTyping] = useState(false);
   
-  const handleSendMessage = (message) => {
+  const handleSendMessage = (message: string) => {
     setMessages([...messages, { content: message, isUser: true }]);
+  };
+
+  const handleResponse = (response: string, sources: Source[], runId: string, pdfPath: string | null) => {
+    setMessages([...messages, { 
+      content: response, 
+      isUser: false, 
+      sources, 
+      runId,
+      pdfPath 
+    }]);
   };
 
   return (
@@ -35,13 +66,18 @@ const Index = () => {
             <ChatMessage 
               key={index} 
               content={message.content} 
-              isUser={message.isUser} 
+              isUser={message.isUser}
+              sources={message.sources}
+              runId={message.runId}
+              pdfPath={message.pdfPath}
             />
           ))}
         </div>
-        <div className="p-4 border-t">
-          <ChatInput onSend={handleSendMessage} />
-        </div>
+        <ChatInput 
+          onSendMessage={handleSendMessage}
+          onResponse={handleResponse}
+          setIsTyping={setIsTyping}
+        />
       </div>
     </div>
   );

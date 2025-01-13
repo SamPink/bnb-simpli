@@ -3,6 +3,7 @@ import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Provider } from "@supabase/supabase-js";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -38,7 +39,7 @@ const Login = () => {
               }
             }
           }}
-          providers={["microsoft"]}
+          providers={['microsoft' as Provider]}
           redirectTo={window.location.origin}
         />
       </div>

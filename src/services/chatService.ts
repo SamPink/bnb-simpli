@@ -1,7 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
-import { Json } from "@/integrations/supabase/types";
-
-export interface Source {
+interface Source {
   document: string;
   page: number;
   paragraph: number;
@@ -13,100 +10,103 @@ export interface Source {
   };
 }
 
-export interface ChatMessage {
+interface ChatResponse {
+  response: string;
+  sources: Source[];
+  pdf_path: string | null;
+}
+
+interface ChatHistoryMessage {
+  role: 'user' | 'assistant';
   content: string;
-  role: string;
   sources?: Source[];
   pdf_path?: string | null;
 }
 
-export const sendChatMessage = async (message: string, userId: string, runId: string) => {
+interface ChatSession {
+  session_id: string;
+  created_at: string;
+}
+
+const API_HEADERS = {
+  'accept': 'application/json',
+  'Content-Type': 'application/json',
+  'ngrok-skip-browser-warning': '1'
+};
+
+export const sendChatMessage = async (message: string, userId: string, runId: string): Promise<ChatResponse> => {
   console.log('Sending chat message:', { message, userId, runId });
   
-  const { data, error } = await supabase
-    .from('messages')
-    .insert({
-      content: message,
-      role: 'user',
-      session_id: runId,
-      sources: null,
-      pdf_path: null
-    })
-    .select()
-    .single();
+  const response = await fetch('https://5c75-2a02-c7c-d4e8-f300-ec6e-966-f8c8-9def.ngrok-free.app/chat', {
+    method: 'POST',
+    headers: API_HEADERS,
+    body: JSON.stringify({
+      message,
+      run_id: runId,
+      user_id: userId,
+    }),
+  });
 
-  if (error) {
-    console.error('Error sending message:', error);
-    throw error;
+  if (!response.ok) {
+    console.error('Chat API error:', response.status, response.statusText);
+    throw new Error('Failed to send message');
   }
-  
-  console.log('Message sent successfully:', data);
+
+  const data = await response.json();
+  console.log('Chat API response:', data);
   return data;
 };
 
-export const getChatSessions = async (userId: string) => {
+export const getChatSessions = async (userId: string): Promise<ChatSession[]> => {
   console.log('Fetching chat sessions for user:', userId);
-  const { data, error } = await supabase
-    .from('chat_sessions')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    console.error('Error fetching chat sessions:', error);
-    throw error;
-  }
   
-  console.log('Retrieved chat sessions:', data);
-  return data;
+  const response = await fetch(`https://5c75-2a02-c7c-d4e8-f300-ec6e-966-f8c8-9def.ngrok-free.app/chats?user_id=${userId}`, {
+    headers: API_HEADERS,
+  });
+
+  if (!response.ok) {
+    console.error('Get chats error:', response.status, response.statusText);
+    throw new Error('Failed to fetch chat sessions');
+  }
+
+  const data = await response.json();
+  console.log('Chat sessions response:', data);
+  return data.chats;
 };
 
-const isValidSource = (source: any): source is Source => {
-  return (
-    typeof source === 'object' &&
-    typeof source.document === 'string' &&
-    typeof source.page === 'number' &&
-    typeof source.paragraph === 'number' &&
-    typeof source.text === 'string' &&
-    typeof source.metadata === 'object' &&
-    typeof source.metadata.size === 'number' &&
-    typeof source.metadata.last_modified === 'string' &&
-    typeof source.metadata.file_type === 'string'
-  );
-};
+export const getChatHistory = async (chatId: string, userId: string): Promise<ChatHistoryMessage[]> => {
+  console.log('Fetching chat history:', { chatId, userId });
+  
+  const response = await fetch(`https://5c75-2a02-c7c-d4e8-f300-ec6e-966-f8c8-9def.ngrok-free.app/chats/${chatId}?user_id=${userId}`, {
+    headers: API_HEADERS,
+  });
 
-const validateSources = (sources: Json | null): Source[] => {
-  if (!sources || !Array.isArray(sources)) {
-    return [];
+  if (!response.ok) {
+    console.error('Get chat history error:', response.status, response.statusText);
+    throw new Error('Failed to fetch chat history');
   }
-  
-  return sources.filter(isValidSource);
-};
 
-export const getChatHistory = async (sessionId: string, userId: string): Promise<ChatMessage[]> => {
-  console.log('Fetching chat history for session:', sessionId);
-  const { data, error } = await supabase
-    .from('messages')
-    .select('*')
-    .eq('session_id', sessionId)
-    .order('created_at', { ascending: true });
-
-  if (error) {
-    console.error('Error fetching chat history:', error);
-    throw error;
-  }
-  
-  console.log('Raw chat history data:', data);
-  
-  return data.map((msg: any) => ({
-    content: msg.content,
-    role: msg.role,
-    sources: validateSources(msg.sources),
-    pdf_path: msg.pdf_path
-  }));
+  const data = await response.json();
+  console.log('Chat history response:', data);
+  return data.history;
 };
 
 export const downloadPdf = async (userId: string, runId: string): Promise<Blob> => {
-  // This is a placeholder since we don't have a pdfs table
-  // You'll need to implement the actual PDF download logic
-  throw new Error('PDF download not implemented');
+  console.log('Downloading PDF:', { userId, runId });
+  
+  const response = await fetch(`https://5c75-2a02-c7c-d4e8-f300-ec6e-966-f8c8-9def.ngrok-free.app/download_pdf?user_id=${userId}&run_id=${runId}`, {
+    headers: {
+      ...API_HEADERS,
+      'accept': 'application/pdf',
+    },
+  });
+
+  if (!response.ok) {
+    console.error('PDF download error:', response.status, response.statusText);
+    throw new Error('Failed to download PDF');
+  }
+
+  const blob = await response.blob();
+  console.log('PDF downloaded successfully');
+  return blob;
 };

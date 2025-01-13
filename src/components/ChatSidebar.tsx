@@ -7,9 +7,8 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
 interface ChatSession {
-  id: string;  // Changed from session_id to match database schema
+  session_id: string;
   created_at: string;
-  title: string | null;
 }
 
 interface ChatSidebarProps {
@@ -78,10 +77,10 @@ export const ChatSidebar = ({ onChatSelect, selectedChat }: ChatSidebarProps) =>
               <div className="space-y-1">
                 {chatSessions.map((session) => (
                   <Button
-                    key={session.id}
-                    variant={selectedChat === session.id ? "secondary" : "ghost"}
+                    key={session.session_id}
+                    variant={selectedChat === session.session_id ? "secondary" : "ghost"}
                     className="w-full justify-start gap-2 text-gray-300 hover:text-white"
-                    onClick={() => onChatSelect?.(session.id)}
+                    onClick={() => onChatSelect?.(session.session_id)}
                   >
                     <MessageSquare className="h-4 w-4" />
                     Chat {format(new Date(session.created_at), 'MMM d, yyyy')}
@@ -116,7 +115,7 @@ export const ChatSidebar = ({ onChatSelect, selectedChat }: ChatSidebarProps) =>
           <img 
             src="https://brownandbrown.simpliautomation.com/assets/SimpliLogo.svg"
             alt="Simpli Logo"
-            className="h-12 w-12"
+            className="h-12 w-12" // Increased size
           />
         </div>
         <p className="text-sm text-gray-400">© 2024 Simpli</p>

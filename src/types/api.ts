@@ -1,7 +1,13 @@
 export interface ChatRequest {
   message: string;
-  user_id: string;
-  run_id: string;
+  user_id?: string | null;
+  run_id?: string | null;
+}
+
+export interface Metadata {
+  size: number;
+  last_modified: string;
+  file_type: string;
 }
 
 export interface Source {
@@ -9,11 +15,7 @@ export interface Source {
   page: number;
   paragraph: number;
   text: string;
-  metadata: {
-    size: number;
-    last_modified: string;
-    file_type: string;
-  };
+  metadata: Metadata;
 }
 
 export interface ChatResponse {

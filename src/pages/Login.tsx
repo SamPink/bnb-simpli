@@ -13,10 +13,11 @@ const Login = () => {
         if (session) {
           try {
             // Exchange the token with our backend
-            const response = await fetch('/api/auth/exchange', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/exchange`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
+                'ngrok-skip-browser-warning': '1'
               },
               body: JSON.stringify({
                 access_token: session.access_token,

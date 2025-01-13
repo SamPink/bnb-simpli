@@ -6,8 +6,26 @@ import { sendChatMessage } from "@/services/chatService";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
+interface Source {
+  document: string;
+  page: number;
+  paragraph: number;
+  text: string;
+  metadata: {
+    size: number;
+    last_modified: string;
+    file_type: string;
+  };
+}
+
 interface ChatInputProps {
-  onSendMessage: (message: string, response: string) => void;
+  onSendMessage: (
+    message: string, 
+    response: string, 
+    sources: Source[], 
+    runId: string, 
+    pdfPath: string | null
+  ) => void;
 }
 
 export const ChatInput = ({ onSendMessage }: ChatInputProps) => {
@@ -17,7 +35,6 @@ export const ChatInput = ({ onSendMessage }: ChatInputProps) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Get the current user's ID when component mounts
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user) {
         setUserId(user.id);
@@ -31,9 +48,15 @@ export const ChatInput = ({ onSendMessage }: ChatInputProps) => {
 
     setIsLoading(true);
     try {
-      const runId = crypto.randomUUID(); // Generate a unique session ID
+      const runId = crypto.randomUUID();
       const response = await sendChatMessage(message, userId, runId);
-      onSendMessage(message, response.response);
+      onSendMessage(
+        message, 
+        response.response, 
+        response.sources, 
+        runId, 
+        response.pdf_path
+      );
       setMessage("");
     } catch (error) {
       console.error('Error sending message:', error);

@@ -46,7 +46,13 @@ const Index = () => {
     });
   }, []);
 
-  const handleSendMessage = (userMessage: string, apiResponse: string, sources: Source[] = [], runId: string, pdfPath: string | null = null) => {
+  const handleSendMessage = (
+    userMessage: string, 
+    apiResponse: string, 
+    sources: Source[] = [], 
+    runId: string, 
+    pdfPath: string | null = null
+  ) => {
     if (!userId) return;
 
     setMessages((prev) => [

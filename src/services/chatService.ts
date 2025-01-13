@@ -26,15 +26,18 @@ interface ChatSession {
   created_at: string;
 }
 
+const API_HEADERS = {
+  'accept': 'application/json',
+  'Content-Type': 'application/json',
+  'ngrok-skip-browser-warning': '1'
+};
+
 export const sendChatMessage = async (message: string, userId: string, runId: string): Promise<ChatResponse> => {
   console.log('Sending chat message:', { message, userId, runId });
   
   const response = await fetch('https://5c75-2a02-c7c-d4e8-f300-ec6e-966-f8c8-9def.ngrok-free.app/chat', {
     method: 'POST',
-    headers: {
-      'accept': 'application/json',
-      'Content-Type': 'application/json',
-    },
+    headers: API_HEADERS,
     body: JSON.stringify({
       message,
       run_id: runId,
@@ -56,9 +59,7 @@ export const getChatSessions = async (userId: string): Promise<ChatSession[]> =>
   console.log('Fetching chat sessions for user:', userId);
   
   const response = await fetch(`https://5c75-2a02-c7c-d4e8-f300-ec6e-966-f8c8-9def.ngrok-free.app/chats?user_id=${userId}`, {
-    headers: {
-      'accept': 'application/json',
-    },
+    headers: API_HEADERS,
   });
 
   if (!response.ok) {
@@ -68,16 +69,14 @@ export const getChatSessions = async (userId: string): Promise<ChatSession[]> =>
 
   const data = await response.json();
   console.log('Chat sessions response:', data);
-  return data.chats; // Make sure we're returning data.chats since that's where the sessions array is
+  return data.chats;
 };
 
 export const getChatHistory = async (chatId: string, userId: string): Promise<ChatHistoryMessage[]> => {
   console.log('Fetching chat history:', { chatId, userId });
   
   const response = await fetch(`https://5c75-2a02-c7c-d4e8-f300-ec6e-966-f8c8-9def.ngrok-free.app/chats/${chatId}?user_id=${userId}`, {
-    headers: {
-      'accept': 'application/json',
-    },
+    headers: API_HEADERS,
   });
 
   if (!response.ok) {
@@ -95,6 +94,7 @@ export const downloadPdf = async (userId: string, runId: string): Promise<Blob> 
   
   const response = await fetch(`https://5c75-2a02-c7c-d4e8-f300-ec6e-966-f8c8-9def.ngrok-free.app/download_pdf?user_id=${userId}&run_id=${runId}`, {
     headers: {
+      ...API_HEADERS,
       'accept': 'application/pdf',
     },
   });

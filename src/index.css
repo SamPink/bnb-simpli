@@ -47,47 +47,51 @@
 
 /* Custom prose styles for markdown content */
 .prose {
-  @apply text-foreground;
+  @apply text-foreground leading-relaxed;
 }
 
-.prose h1, .prose h2, .prose h3, .prose h4 {
-  @apply text-foreground font-semibold mb-2;
+.prose h1, .prose h2, .prose h3 {
+  @apply text-foreground font-semibold mt-6 first:mt-0;
 }
 
 .prose h1 {
-  @apply text-2xl;
+  @apply text-2xl mb-4;
 }
 
 .prose h2 {
-  @apply text-xl;
+  @apply text-xl mb-3;
 }
 
 .prose h3 {
-  @apply text-lg;
+  @apply text-lg mb-2;
+}
+
+.prose p {
+  @apply my-3 leading-relaxed;
 }
 
 .prose ul {
-  @apply my-2 list-disc list-inside;
+  @apply my-3 list-disc list-inside space-y-1.5;
 }
 
 .prose ol {
-  @apply my-2 list-decimal list-inside;
+  @apply my-3 list-decimal list-inside space-y-1.5;
 }
 
 .prose li {
-  @apply my-1;
+  @apply leading-relaxed;
 }
 
 .prose code {
-  @apply bg-muted px-1.5 py-0.5 rounded text-sm font-mono;
+  @apply bg-muted/50 px-1.5 py-0.5 rounded text-sm font-mono;
 }
 
 .prose pre {
-  @apply bg-muted p-4 rounded-lg my-2 overflow-x-auto;
+  @apply bg-muted p-4 rounded-lg my-4 overflow-x-auto;
 }
 
 .prose blockquote {
-  @apply border-l-4 border-primary pl-4 my-2 italic;
+  @apply border-l-4 border-primary pl-4 my-4 italic;
 }
 
 .prose a {
@@ -95,13 +99,13 @@
 }
 
 .chat-bubble {
-  @apply px-4 py-2 rounded-lg max-w-[80%] break-words;
+  @apply px-6 py-4 rounded-xl max-w-[85%] break-words;
 }
 
 .user-message {
-  @apply bg-primary text-primary-foreground ml-auto;
+  @apply bg-primary text-primary-foreground shadow-lg ml-auto;
 }
 
 .agent-message {
-  @apply bg-muted text-muted-foreground;
+  @apply bg-card text-card-foreground border border-border shadow-sm;
 }

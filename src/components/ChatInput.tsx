@@ -19,16 +19,12 @@ interface Source {
 }
 
 interface ChatInputProps {
-  onSendMessage: (
-    message: string, 
-    response: string, 
-    sources: Source[], 
-    runId: string, 
-    pdfPath: string | null
-  ) => void;
+  onSendMessage: (message: string) => void;
+  onResponse: (response: string, sources: Source[], runId: string, pdfPath: string | null) => void;
+  setIsTyping: (isTyping: boolean) => void;
 }
 
-export const ChatInput = ({ onSendMessage }: ChatInputProps) => {
+export const ChatInput = ({ onSendMessage, onResponse, setIsTyping }: ChatInputProps) => {
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
@@ -47,16 +43,17 @@ export const ChatInput = ({ onSendMessage }: ChatInputProps) => {
     if (!message.trim() || !userId) return;
 
     setIsLoading(true);
+    setIsTyping(true);
+    
     try {
+      // Immediately show user message
+      onSendMessage(message);
+      
       const runId = crypto.randomUUID();
       const response = await sendChatMessage(message, userId, runId);
-      onSendMessage(
-        message, 
-        response.response, 
-        response.sources, 
-        runId, 
-        response.pdf_path
-      );
+      
+      // Add AI response after it's received
+      onResponse(response.response, response.sources, runId, response.pdf_path);
       setMessage("");
     } catch (error) {
       console.error('Error sending message:', error);
@@ -67,6 +64,7 @@ export const ChatInput = ({ onSendMessage }: ChatInputProps) => {
       });
     } finally {
       setIsLoading(false);
+      setIsTyping(false);
     }
   };
 

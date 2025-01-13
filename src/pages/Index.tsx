@@ -75,35 +75,29 @@ const Index = () => {
     }
   };
 
-  const handleSendMessage = async (
-    userMessage: string, 
+  const handleUserMessage = (userMessage: string) => {
+    if (!userId) return;
+    setMessages(prev => [...prev, { content: userMessage, isUser: true }]);
+  };
+
+  const handleAIResponse = (
     apiResponse: string, 
     sources: Source[] = [], 
     runId: string, 
     pdfPath: string | null = null
   ) => {
     if (!userId) return;
-
-    // Immediately add user message
-    setMessages(prev => [...prev, { content: userMessage, isUser: true }]);
-    setIsTyping(true);
-
-    try {
-      // Add AI response after it's received
-      setMessages(prev => [
-        ...prev,
-        { 
-          content: apiResponse, 
-          isUser: false, 
-          sources, 
-          userId, 
-          runId,
-          pdfPath
-        }
-      ]);
-    } finally {
-      setIsTyping(false);
-    }
+    setMessages(prev => [
+      ...prev,
+      { 
+        content: apiResponse, 
+        isUser: false, 
+        sources, 
+        userId, 
+        runId,
+        pdfPath
+      }
+    ]);
   };
 
   const handleLogout = async () => {
@@ -139,7 +133,11 @@ const Index = () => {
           {isTyping && <TypingIndicator />}
         </div>
         
-        <ChatInput onSendMessage={handleSendMessage} />
+        <ChatInput 
+          onSendMessage={handleUserMessage}
+          onResponse={handleAIResponse}
+          setIsTyping={setIsTyping}
+        />
       </div>
     </div>
   );

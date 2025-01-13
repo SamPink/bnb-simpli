@@ -1,9 +1,6 @@
-import { Auth } from "@supabase/auth-ui-react";
-import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Provider } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 
 const Login = () => {
@@ -47,30 +44,6 @@ const Login = () => {
         >
           Sign in with Azure
         </Button>
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
-          </div>
-        </div>
-        <Auth
-          supabaseClient={supabase}
-          appearance={{
-            theme: ThemeSupa,
-            variables: {
-              default: {
-                colors: {
-                  brand: 'rgb(var(--primary))',
-                  brandAccent: 'rgb(var(--accent))',
-                }
-              }
-            }
-          }}
-          providers={['microsoft' as Provider]}
-          redirectTo={window.location.origin}
-        />
       </div>
     </div>
   );

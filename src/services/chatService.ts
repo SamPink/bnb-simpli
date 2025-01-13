@@ -28,16 +28,20 @@ interface ChatSession {
   created_at: string;
 }
 
+const API_BASE_URL = 'https://bnb.gentlesand-b0965d81.westeurope.azurecontainerapps.io';
+const API_CREDENTIALS = btoa('testuser:testpassword');
+
 const API_HEADERS = {
   'accept': 'application/json',
   'Content-Type': 'application/json',
+  'Authorization': `Basic ${API_CREDENTIALS}`,
   'ngrok-skip-browser-warning': '1'
 };
 
 export const sendChatMessage = async (message: string, userId: string, runId: string): Promise<ChatResponse> => {
   console.log('Sending chat message:', { message, userId, runId });
   
-  const response = await fetch('https://5c75-2a02-c7c-d4e8-f300-ec6e-966-f8c8-9def.ngrok-free.app/chat', {
+  const response = await fetch(`${API_BASE_URL}/chat`, {
     method: 'POST',
     headers: API_HEADERS,
     body: JSON.stringify({
@@ -60,7 +64,7 @@ export const sendChatMessage = async (message: string, userId: string, runId: st
 export const getChatSessions = async (userId: string): Promise<ChatSession[]> => {
   console.log('Fetching chat sessions for user:', userId);
   
-  const response = await fetch(`https://5c75-2a02-c7c-d4e8-f300-ec6e-966-f8c8-9def.ngrok-free.app/chats?user_id=${userId}`, {
+  const response = await fetch(`${API_BASE_URL}/chats?user_id=${userId}`, {
     headers: API_HEADERS,
   });
 
@@ -77,7 +81,7 @@ export const getChatSessions = async (userId: string): Promise<ChatSession[]> =>
 export const getChatHistory = async (chatId: string, userId: string): Promise<ChatHistoryMessage[]> => {
   console.log('Fetching chat history:', { chatId, userId });
   
-  const response = await fetch(`https://5c75-2a02-c7c-d4e8-f300-ec6e-966-f8c8-9def.ngrok-free.app/chats/${chatId}?user_id=${userId}`, {
+  const response = await fetch(`${API_BASE_URL}/chats/${chatId}?user_id=${userId}`, {
     headers: API_HEADERS,
   });
 
@@ -94,7 +98,7 @@ export const getChatHistory = async (chatId: string, userId: string): Promise<Ch
 export const downloadPdf = async (userId: string, runId: string): Promise<Blob> => {
   console.log('Downloading PDF:', { userId, runId });
   
-  const response = await fetch(`https://5c75-2a02-c7c-d4e8-f300-ec6e-966-f8c8-9def.ngrok-free.app/download_pdf?user_id=${userId}&run_id=${runId}`, {
+  const response = await fetch(`${API_BASE_URL}/download_pdf?user_id=${userId}&run_id=${runId}`, {
     headers: {
       ...API_HEADERS,
       'accept': 'application/pdf',

@@ -51,6 +51,15 @@ export const ChatSidebar = ({ onChatSelect, selectedChat }: ChatSidebarProps) =>
 
   return (
     <div className="w-80 border-r border-border bg-[#1C2127] flex flex-col h-full">
+      {/* Top Logo */}
+      <div className="p-4 border-b border-border flex justify-center">
+        <img 
+          src="https://brownandbrown.simpliautomation.com/assets/bravo-networks-logo-DMrGQqwm.png"
+          alt="Bravo Networks Logo"
+          className="h-12 object-contain"
+        />
+      </div>
+
       <div className="p-6 border-b border-border">
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-white">Demo Instructions</h2>
@@ -106,7 +115,7 @@ export const ChatSidebar = ({ onChatSelect, selectedChat }: ChatSidebarProps) =>
           <img 
             src="https://brownandbrown.simpliautomation.com/assets/SimpliLogo.svg"
             alt="Simpli Logo"
-            className="h-8 w-8"
+            className="h-12 w-12" // Increased size
           />
         </div>
         <p className="text-sm text-gray-400">© 2024 Simpli</p>

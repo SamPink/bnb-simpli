@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { ChatSources } from "./ChatSources";
+import ReactMarkdown from 'react-markdown';
 
 interface Source {
   document: string;
@@ -28,11 +29,13 @@ export const ChatMessage = ({ content, isUser, sources = [], userId, runId, pdfP
       <div 
         className={cn(
           "p-4 rounded-lg max-w-[80%]",
-          "whitespace-pre-wrap break-words",
+          "break-words",
           isUser ? "ml-auto bg-primary text-primary-foreground" : "mr-auto bg-card border border-border"
         )}
       >
-        {content}
+        <ReactMarkdown className="prose prose-invert">
+          {content}
+        </ReactMarkdown>
       </div>
       {!isUser && sources.length > 0 && userId && runId && (
         <ChatSources

@@ -68,7 +68,7 @@ export const getChatSessions = async (userId: string): Promise<ChatSession[]> =>
 
   const data = await response.json();
   console.log('Chat sessions response:', data);
-  return data.chats;
+  return data.chats; // Make sure we're returning data.chats since that's where the sessions array is
 };
 
 export const getChatHistory = async (chatId: string, userId: string): Promise<ChatHistoryMessage[]> => {

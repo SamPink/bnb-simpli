@@ -19,6 +19,7 @@ export const ChatSidebar = () => {
     const fetchUserId = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        console.log('Current user:', user.id);
         setUserId(user.id);
         fetchChatSessions(user.id);
       }
@@ -28,7 +29,9 @@ export const ChatSidebar = () => {
 
   const fetchChatSessions = async (uid: string) => {
     try {
+      console.log('Fetching chat sessions for user:', uid);
       const sessions = await getChatSessions(uid);
+      console.log('Received chat sessions:', sessions);
       setChatSessions(sessions);
     } catch (error) {
       console.error('Error fetching chat sessions:', error);
@@ -71,22 +74,28 @@ export const ChatSidebar = () => {
       <div className="mt-4">
         <div className="text-sm font-medium text-muted-foreground mb-2">Chat History</div>
         <div className="space-y-1">
-          {chatSessions.map((session) => (
-            <Button
-              key={session.session_id}
-              variant="ghost"
-              className="w-full justify-start text-sm font-normal h-auto py-2"
-            >
-              <div className="flex flex-col items-start">
-                <span className="text-xs text-muted-foreground">
-                  {formatDate(session.created_at)}
-                </span>
-                <span className="truncate w-full">
-                  Chat {session.session_id.slice(0, 8)}
-                </span>
-              </div>
-            </Button>
-          ))}
+          {chatSessions && chatSessions.length > 0 ? (
+            chatSessions.map((session) => (
+              <Button
+                key={session.session_id}
+                variant="ghost"
+                className="w-full justify-start text-sm font-normal h-auto py-2"
+              >
+                <div className="flex flex-col items-start">
+                  <span className="text-xs text-muted-foreground">
+                    {formatDate(session.created_at)}
+                  </span>
+                  <span className="truncate w-full">
+                    Chat {session.session_id.slice(0, 8)}
+                  </span>
+                </div>
+              </Button>
+            ))
+          ) : (
+            <div className="text-sm text-muted-foreground p-2">
+              No chat history found
+            </div>
+          )}
         </div>
       </div>
     </div>

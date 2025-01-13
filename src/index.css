@@ -109,3 +109,24 @@
 .agent-message {
   @apply bg-card text-card-foreground border border-border shadow-sm;
 }
+
+/* PDF viewer styles */
+.pdf-document {
+  @apply flex flex-col items-center;
+}
+
+.pdf-document .react-pdf__Page {
+  @apply mb-4 bg-background rounded-lg shadow-lg;
+}
+
+.pdf-document .react-pdf__Page__canvas {
+  @apply w-full h-auto rounded-lg;
+}
+
+.pdf-document .react-pdf__Page__annotations.annotationLayer {
+  @apply hidden;
+}
+
+.pdf-document .react-pdf__Page__textContent {
+  @apply hidden;
+}

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { getChatSessions, getChatHistory } from "@/services/chatService";
+import { getChatHistory } from "@/services/chatService";
 import { useToast } from "@/hooks/use-toast";
 
 interface Source {
@@ -37,6 +37,7 @@ const Index = () => {
     { content: "Hello! How can I assist you today?", isUser: false },
   ]);
   const [userId, setUserId] = useState<string | null>(null);
+  const [selectedChat, setSelectedChat] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -45,6 +46,32 @@ const Index = () => {
       }
     });
   }, []);
+
+  const handleChatSelect = async (sessionId: string) => {
+    if (!userId) return;
+    
+    console.log('Loading chat history for session:', sessionId);
+    setSelectedChat(sessionId);
+    
+    try {
+      const history = await getChatHistory(sessionId, userId);
+      console.log('Received chat history:', history);
+      
+      const formattedMessages: Message[] = history.map(msg => ({
+        content: msg.content,
+        isUser: msg.role === 'user',
+      }));
+      
+      setMessages(formattedMessages);
+    } catch (error) {
+      console.error('Error loading chat history:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load chat history",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleSendMessage = (
     userMessage: string, 
@@ -76,7 +103,10 @@ const Index = () => {
 
   return (
     <div className="flex h-screen">
-      <ChatSidebar />
+      <ChatSidebar 
+        onChatSelect={handleChatSelect}
+        selectedChat={selectedChat || undefined}
+      />
       
       <div className="flex-1 flex flex-col">
         <header className="flex justify-between items-center p-4 border-b border-border">

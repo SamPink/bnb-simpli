@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { LayoutGrid, MessageSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { getChatSessions } from "@/services/chatService";
+import { getChatSessions, getChatHistory } from "@/services/chatService";
 import { useToast } from "@/hooks/use-toast";
 
 interface ChatSession {
@@ -10,7 +10,12 @@ interface ChatSession {
   created_at: string;
 }
 
-export const ChatSidebar = () => {
+interface ChatSidebarProps {
+  onChatSelect?: (sessionId: string) => void;
+  selectedChat?: string;
+}
+
+export const ChatSidebar = ({ onChatSelect, selectedChat }: ChatSidebarProps) => {
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const { toast } = useToast();
@@ -78,8 +83,9 @@ export const ChatSidebar = () => {
             chatSessions.map((session) => (
               <Button
                 key={session.session_id}
-                variant="ghost"
+                variant={selectedChat === session.session_id ? "secondary" : "ghost"}
                 className="w-full justify-start text-sm font-normal h-auto py-2"
+                onClick={() => onChatSelect?.(session.session_id)}
               >
                 <div className="flex flex-col items-start">
                   <span className="text-xs text-muted-foreground">

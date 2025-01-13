@@ -7,10 +7,13 @@ interface ChatMessageProps {
 
 export const ChatMessage = ({ content, isUser }: ChatMessageProps) => {
   return (
-    <div className={cn(
-      "chat-bubble whitespace-pre-wrap", 
-      isUser ? "user-message" : "agent-message"
-    )}>
+    <div 
+      className={cn(
+        "p-4 rounded-lg max-w-[80%]",
+        "whitespace-pre-wrap break-words",
+        isUser ? "ml-auto bg-primary text-primary-foreground" : "mr-auto bg-muted"
+      )}
+    >
       {content}
     </div>
   );

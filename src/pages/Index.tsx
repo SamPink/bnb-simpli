@@ -18,15 +18,12 @@ const Index = () => {
     { content: "Hello! How can I assist you today?", isUser: false },
   ]);
 
-  const handleSendMessage = (content: string) => {
-    setMessages((prev) => [...prev, { content, isUser: true }]);
-    // Simulate agent response
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        { content: "Hello! How can I assist you today?", isUser: false },
-      ]);
-    }, 1000);
+  const handleSendMessage = (userMessage: string, apiResponse: string) => {
+    setMessages((prev) => [
+      ...prev,
+      { content: userMessage, isUser: true },
+      { content: apiResponse, isUser: false }
+    ]);
   };
 
   const handleLogout = async () => {

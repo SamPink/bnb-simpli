@@ -66,15 +66,19 @@ const Index = () => {
       const history = await getChatHistory(sessionId, userId);
       console.log('Received chat history:', history);
       
-      const formattedMessages: Message[] = history.map(msg => ({
-        content: msg.content,
-        isUser: msg.role === 'user',
-        sources: msg.sources || [],
-        userId: userId,
-        runId: sessionId,
-        pdfPath: msg.pdf_path || null
-      }));
+      const formattedMessages: Message[] = history.map(msg => {
+        console.log('Formatting message:', msg);
+        return {
+          content: msg.content,
+          isUser: msg.role === 'user',
+          sources: msg.sources || [],
+          userId: userId,
+          runId: sessionId,
+          pdfPath: msg.pdf_path || null
+        };
+      });
       
+      console.log('Formatted messages:', formattedMessages);
       setMessages(formattedMessages);
     } catch (error) {
       console.error('Error loading chat history:', error);
@@ -98,6 +102,7 @@ const Index = () => {
     pdfPath: string | null = null
   ) => {
     if (!userId) return;
+    console.log('Handling AI response:', { apiResponse, sources, runId, pdfPath });
     setMessages(prev => [
       ...prev,
       { 

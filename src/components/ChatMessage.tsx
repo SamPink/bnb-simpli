@@ -29,7 +29,7 @@ export const ChatMessage = ({ content, isUser, sources = [], userId, runId, pdfP
         className={cn(
           "p-4 rounded-lg max-w-[80%]",
           "whitespace-pre-wrap break-words",
-          isUser ? "ml-auto bg-primary text-primary-foreground" : "mr-auto bg-muted"
+          isUser ? "ml-auto bg-primary text-primary-foreground" : "mr-auto bg-card border border-border"
         )}
       >
         {content}

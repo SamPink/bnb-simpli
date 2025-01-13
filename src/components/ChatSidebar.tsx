@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { LayoutGrid, MessageSquare } from "lucide-react";
+import { MessageSquare, HelpCircle, Settings, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { getChatSessions, getChatHistory } from "@/services/chatService";
+import { getChatSessions } from "@/services/chatService";
 import { useToast } from "@/hooks/use-toast";
 
 interface ChatSession {
@@ -48,61 +48,57 @@ export const ChatSidebar = ({ onChatSelect, selectedChat }: ChatSidebarProps) =>
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
   return (
-    <div className="w-64 border-r border-border bg-card p-4 flex flex-col gap-2">
-      <div className="flex items-center gap-2 mb-8">
-        <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-          <span className="text-primary-foreground font-bold">S</span>
+    <div className="w-80 border-r border-border bg-card flex flex-col h-full">
+      <div className="p-6 border-b border-border">
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold">Demo Instructions</h2>
+          <p className="text-sm text-muted-foreground">
+            This demo version provides an early showcase of the Brown & Brown Support Desk Agent.
+          </p>
         </div>
-        <span className="font-semibold">Simpli</span>
       </div>
-      
-      <Button variant="ghost" className="justify-start gap-2">
-        <LayoutGrid className="h-4 w-4" />
-        Agents
-      </Button>
-      
-      <Button variant="ghost" className="justify-start gap-2">
-        <MessageSquare className="h-4 w-4" />
-        All Chats
-      </Button>
 
-      <div className="mt-4">
-        <div className="text-sm font-medium text-muted-foreground mb-2">Chat History</div>
-        <div className="space-y-1">
-          {chatSessions && chatSessions.length > 0 ? (
-            chatSessions.map((session) => (
-              <Button
-                key={session.session_id}
-                variant={selectedChat === session.session_id ? "secondary" : "ghost"}
-                className="w-full justify-start text-sm font-normal h-auto py-2"
-                onClick={() => onChatSelect?.(session.session_id)}
-              >
-                <div className="flex flex-col items-start">
-                  <span className="text-xs text-muted-foreground">
-                    {formatDate(session.created_at)}
-                  </span>
-                  <span className="truncate w-full">
-                    Chat {session.session_id.slice(0, 8)}
-                  </span>
-                </div>
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-sm font-medium mb-2">Quick Access</h3>
+            <div className="space-y-1">
+              <Button variant="ghost" className="w-full justify-start gap-2">
+                <MessageSquare className="h-4 w-4" />
+                All Chats
               </Button>
-            ))
-          ) : (
-            <div className="text-sm text-muted-foreground p-2">
-              No chat history found
+              <Button variant="ghost" className="w-full justify-start gap-2">
+                <HelpCircle className="h-4 w-4" />
+                Help & Support
+              </Button>
+              <Button variant="ghost" className="w-full justify-start gap-2">
+                <Settings className="h-4 w-4" />
+                Settings
+              </Button>
             </div>
-          )}
+          </div>
+
+          <div>
+            <h3 className="text-sm font-medium mb-2">Full Version Features</h3>
+            <div className="space-y-2 text-sm text-muted-foreground">
+              <p>• Access to all chats and historical interactions</p>
+              <p>• Help and Support pages for easy navigation</p>
+              <p>• User account settings with profile management</p>
+              <p>• Custom functionalities as per your requirements</p>
+            </div>
+          </div>
         </div>
+      </div>
+
+      <div className="p-6 border-t border-border mt-auto">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+            <span className="text-primary-foreground font-bold">S</span>
+          </div>
+          <span className="font-semibold">Simpli</span>
+        </div>
+        <p className="text-sm text-muted-foreground">© 2024 Simpli</p>
       </div>
     </div>
   );

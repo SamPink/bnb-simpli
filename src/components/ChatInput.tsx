@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { sendChatMessage } from "@/services/chatService";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Json } from "@/integrations/supabase/types";
 
 interface Source {
   document: string;
@@ -53,7 +54,12 @@ export const ChatInput = ({ onSendMessage, onResponse, setIsTyping }: ChatInputP
       const response = await sendChatMessage(message, userId, runId);
       
       // Add AI response after it's received
-      onResponse(response.response, response.sources, runId, response.pdf_path);
+      onResponse(
+        response.content,
+        (response.sources as Source[]) || [],
+        runId,
+        response.pdf_path
+      );
       setMessage("");
     } catch (error) {
       console.error('Error sending message:', error);

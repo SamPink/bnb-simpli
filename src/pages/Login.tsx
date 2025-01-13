@@ -42,17 +42,22 @@ const Login = () => {
   }, [navigate]);
 
   const signInWithAzure = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'azure',
-      options: {
-        scopes: 'email offline_access',
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'azure',
+        options: {
+          scopes: 'email offline_access',
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
 
-    if (error) {
-      console.error('Azure sign in error:', error);
-      toast.error('Failed to sign in with Azure. Please try again.');
+      if (error) {
+        console.error('Azure sign in error:', error);
+        toast.error('Failed to sign in with Azure. Please try again.');
+      }
+    } catch (error) {
+      console.error('Unexpected error during sign in:', error);
+      toast.error('An unexpected error occurred. Please try again.');
     }
   };
 

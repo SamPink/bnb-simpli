@@ -122,7 +122,7 @@ const Index = () => {
   const handleAIResponse = (
     apiResponse: string, 
     sources: Source[] = [], 
-    runId: string, 
+    _runId: string, // Ignore the runId from the response
     pdfPath: string | null = null
   ) => {
     if (!userId) return;
@@ -143,7 +143,7 @@ const Index = () => {
         isUser: false, 
         sources, 
         userId, 
-        runId: currentRunId, // Use the current run ID instead of the one from the response
+        runId: currentRunId, // Always use the current run ID
         pdfPath,
         messageId,
         previousMessage
@@ -182,6 +182,7 @@ const Index = () => {
             <ChatMessage 
               key={message.messageId || index}
               {...message}
+              sessionId={message.runId} // Pass runId as sessionId for feedback
               userId={userId || undefined}
               previousMessage={index > 0 ? messages[index - 1].content : undefined}
             />

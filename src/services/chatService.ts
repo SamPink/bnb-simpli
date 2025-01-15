@@ -33,7 +33,10 @@ interface ChatSession {
 const API_BASE_URL = 'https://d892-2a02-c7c-d4e8-f300-6dee-b3fa-8bc1-7d8.ngrok-free.app';
 
 const getApiHeaders = async () => {
-  const { data: { secret }, error } = await supabase.functions.secrets.get('API_TOKEN');
+  const { data, error } = await supabase.functions.invoke('get-api-token', {
+    body: { name: 'API_TOKEN' }
+  });
+
   if (error) {
     console.error('Error fetching API token:', error);
     throw new Error('Failed to get API token');
@@ -44,7 +47,7 @@ const getApiHeaders = async () => {
     'Content-Type': 'application/json',
     'Authorization': 'Bearer testuser',
     'ngrok-skip-browser-warning': '1',
-    'X-API-Token': secret,
+    'X-API-Token': data.secret,
   };
 };
 

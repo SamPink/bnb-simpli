@@ -38,7 +38,12 @@ export const ChatMessage = ({
   previousMessage,
   messageId
 }: ChatMessageProps) => {
-  console.log('ChatMessage props:', { isUser, sessionId, messageId }); // Debug log
+  console.log('ChatMessage props:', { 
+    isUser, 
+    sessionId, 
+    messageId, 
+    previousMessage 
+  }); // Enhanced debug log
 
   return (
     <div className={cn(
@@ -82,7 +87,7 @@ export const ChatMessage = ({
 
         {!isUser && sessionId && (
           <StarRating
-            messageId={messageId || userId || ''}
+            messageId={messageId || ''}
             sessionId={sessionId}
             aiMessage={content}
             userMessage={previousMessage}

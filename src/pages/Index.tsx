@@ -31,6 +31,7 @@ interface Message {
   pdfPath?: string | null;
   sessionId?: string;
   messageId?: string;
+  previousMessage?: string;
 }
 
 const Index = () => {
@@ -49,44 +50,34 @@ const Index = () => {
     },
   ]);
   const [userId, setUserId] = useState<string | null>(null);
-  const [selectedChat, setSelectedChat] = useState<string | null>(null);
-  const [isTyping, setIsTyping] = useState(false);
   const [currentSessionId, setCurrentSessionId] = useState<string>(crypto.randomUUID());
+  const [isTyping, setIsTyping] = useState(false);
+
+  console.log('Current session ID:', currentSessionId);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user) {
+        console.log('User authenticated:', user.id);
         setUserId(user.id);
       }
     });
   }, []);
 
-  const parseSourcesFromContent = (content: string): Source[] => {
-    const sourcesMatch = content.match(/<sources>(.*?)<\/sources>/s);
-    if (!sourcesMatch) return [];
-
-    const sourceContent = sourcesMatch[1];
-    const source: Source = {
-      document: (sourceContent.match(/<document>(.*?)<\/document>/) || [])[1] || '',
-      page: parseInt((sourceContent.match(/<page>(\d+)<\/page>/) || [])[1] || '0'),
-      paragraph: parseInt((sourceContent.match(/<paragraph>(\d+)<\/paragraph>/) || [])[1] || '0'),
-      text: (sourceContent.match(/<text>(.*?)<\/text>/s) || [])[1] || '',
-      metadata: {
-        size: 0,
-        last_modified: '',
-        file_type: ''
-      }
-    };
-
-    return [source];
-  };
-
-  const handleChatSelect = async (sessionId: string) => {
+  const handleChatSelect = async (sessionId?: string) => {
     if (!userId) return;
     
+    if (!sessionId) {
+      // Starting a new conversation
+      const newSessionId = crypto.randomUUID();
+      console.log('Starting new conversation with session ID:', newSessionId);
+      setCurrentSessionId(newSessionId);
+      setMessages([messages[0]]); // Keep welcome message only
+      return;
+    }
+    
     console.log('Loading chat history for session:', sessionId);
-    setSelectedChat(sessionId);
-    setCurrentSessionId(sessionId); // Update current session ID when selecting a chat
+    setCurrentSessionId(sessionId);
     
     try {
       const history = await getChatHistory(sessionId, userId);
@@ -95,16 +86,16 @@ const Index = () => {
       const formattedMessages: Message[] = history.map((msg, index) => ({
         content: msg.content,
         isUser: msg.role === 'user',
-        sources: msg.sources || parseSourcesFromContent(msg.content),
+        sources: msg.sources,
         userId: userId,
         runId: sessionId,
         pdfPath: msg.pdf_path || null,
         sessionId: sessionId,
-        messageId: `${sessionId}-${index}`
+        messageId: `${sessionId}-${index}`,
+        previousMessage: index > 0 ? history[index - 1].content : undefined
       }));
       
-      console.log('Formatted messages:', formattedMessages);
-      setMessages(formattedMessages);
+      setMessages([messages[0], ...formattedMessages]);
     } catch (error) {
       console.error('Error loading chat history:', error);
       toast({
@@ -118,18 +109,15 @@ const Index = () => {
   const handleUserMessage = (userMessage: string) => {
     if (!userId) return;
     
-    // If no chat is selected, create a new session
-    if (!selectedChat) {
-      const newSessionId = crypto.randomUUID();
-      setSelectedChat(newSessionId);
-      setCurrentSessionId(newSessionId);
-    }
+    const messageId = `${currentSessionId}-${Date.now()}-user`;
+    console.log('Adding user message:', { messageId, sessionId: currentSessionId });
     
     setMessages(prev => [...prev, { 
       content: userMessage, 
       isUser: true,
-      messageId: `${currentSessionId}-${Date.now()}-user`,
-      sessionId: currentSessionId // Use current session ID
+      messageId,
+      sessionId: currentSessionId,
+      userId
     }]);
   };
 
@@ -140,7 +128,15 @@ const Index = () => {
     pdfPath: string | null = null
   ) => {
     if (!userId) return;
-    console.log('Handling AI response:', { apiResponse, sources, runId, pdfPath });
+    
+    const messageId = `${currentSessionId}-${Date.now()}-ai`;
+    const previousMessage = messages[messages.length - 1]?.content;
+    
+    console.log('Adding AI response:', { 
+      messageId, 
+      sessionId: currentSessionId,
+      hasPreviousMessage: !!previousMessage 
+    });
     
     setMessages(prev => [
       ...prev,
@@ -151,8 +147,9 @@ const Index = () => {
         userId, 
         runId,
         pdfPath,
-        sessionId: currentSessionId, // Use current session ID
-        messageId: `${currentSessionId}-${Date.now()}-ai`
+        sessionId: currentSessionId,
+        messageId,
+        previousMessage
       }
     ]);
   };
@@ -166,7 +163,7 @@ const Index = () => {
     <div className="flex h-screen bg-background">
       <ChatSidebar 
         onChatSelect={handleChatSelect}
-        selectedChat={selectedChat || undefined}
+        selectedChat={currentSessionId}
       />
       
       <div className="flex-1 flex flex-col">

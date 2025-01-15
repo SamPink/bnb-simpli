@@ -24,17 +24,23 @@ export const StarRating = ({ messageId, sessionId, aiMessage, userMessage }: Sta
     console.log('Submitting rating:', selectedRating);
 
     try {
-      // Get the current session
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('No authenticated session found');
+      // Get API token from Supabase Function
+      const { data, error } = await supabase.functions.invoke('get-api-token', {
+        body: { name: 'API_TOKEN' }
+      });
 
-      // Call the feedback endpoint with auth token
+      if (error) {
+        console.error('Error fetching API token:', error);
+        throw new Error('Failed to get API token');
+      }
+
+      // Call the feedback endpoint with the API token
       const response = await fetch('https://d892-2a02-c7c-d4e8-f300-6dee-b3fa-8bc1-7d8.ngrok-free.app/feedback', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'ngrok-skip-browser-warning': '1',
-          'Authorization': `Bearer ${session.access_token}`,
+          'X-API-Token': data.secret,
         },
         body: JSON.stringify({
           user_id: messageId,

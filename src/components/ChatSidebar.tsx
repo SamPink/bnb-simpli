@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, HelpCircle, Settings } from "lucide-react";
+import { MessageSquare, HelpCircle, Settings, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getChatSessions } from "@/services/chatService";
 import { useToast } from "@/hooks/use-toast";
@@ -49,6 +49,11 @@ export const ChatSidebar = ({ onChatSelect, selectedChat }: ChatSidebarProps) =>
     }
   };
 
+  const handleNewConversation = () => {
+    // Clear the selected chat by passing null or undefined
+    onChatSelect?.(undefined);
+  };
+
   return (
     <div className="w-80 border-r border-border bg-[#1C2127] flex flex-col h-full">
       {/* Top Logo */}
@@ -62,7 +67,14 @@ export const ChatSidebar = ({ onChatSelect, selectedChat }: ChatSidebarProps) =>
 
       <div className="p-6 border-b border-border">
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-white">Demo Instructions</h2>
+          <Button
+            variant="default"
+            className="w-full gap-2"
+            onClick={handleNewConversation}
+          >
+            <Plus className="h-4 w-4" />
+            New Conversation
+          </Button>
           <p className="text-sm text-gray-400">
             This demo version provides an early showcase of the Brown & Brown Support Desk Agent.
           </p>
@@ -115,7 +127,7 @@ export const ChatSidebar = ({ onChatSelect, selectedChat }: ChatSidebarProps) =>
           <img 
             src="https://brownandbrown.simpliautomation.com/assets/SimpliLogo.svg"
             alt="Simpli Logo"
-            className="h-12 w-12" // Increased size
+            className="h-12 w-12"
           />
         </div>
         <p className="text-sm text-gray-400">© 2024 Simpli</p>

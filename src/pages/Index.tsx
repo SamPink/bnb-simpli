@@ -29,7 +29,6 @@ interface Message {
   userId?: string;
   runId?: string;
   pdfPath?: string | null;
-  sessionId?: string;
   messageId?: string;
   previousMessage?: string;
 }
@@ -46,14 +45,14 @@ const Index = () => {
                "Important: In this demo, some functionalities are disabled.", 
       isUser: false,
       messageId: 'welcome-message',
-      sessionId: 'welcome'
+      runId: 'welcome'
     },
   ]);
   const [userId, setUserId] = useState<string | null>(null);
-  const [currentSessionId, setCurrentSessionId] = useState<string>(crypto.randomUUID());
+  const [currentRunId, setCurrentRunId] = useState<string>(crypto.randomUUID());
   const [isTyping, setIsTyping] = useState(false);
 
-  console.log('Current session ID:', currentSessionId);
+  console.log('Current run ID:', currentRunId);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -64,23 +63,23 @@ const Index = () => {
     });
   }, []);
 
-  const handleChatSelect = async (sessionId?: string) => {
+  const handleChatSelect = async (runId?: string) => {
     if (!userId) return;
     
-    if (!sessionId) {
+    if (!runId) {
       // Starting a new conversation
-      const newSessionId = crypto.randomUUID();
-      console.log('Starting new conversation with session ID:', newSessionId);
-      setCurrentSessionId(newSessionId);
+      const newRunId = crypto.randomUUID();
+      console.log('Starting new conversation with run ID:', newRunId);
+      setCurrentRunId(newRunId);
       setMessages([messages[0]]); // Keep welcome message only
       return;
     }
     
-    console.log('Loading chat history for session:', sessionId);
-    setCurrentSessionId(sessionId);
+    console.log('Loading chat history for run ID:', runId);
+    setCurrentRunId(runId);
     
     try {
-      const history = await getChatHistory(sessionId, userId);
+      const history = await getChatHistory(runId, userId);
       console.log('Received chat history:', history);
       
       const formattedMessages: Message[] = history.map((msg, index) => ({
@@ -88,10 +87,9 @@ const Index = () => {
         isUser: msg.role === 'user',
         sources: msg.sources,
         userId: userId,
-        runId: sessionId,
+        runId: runId,
         pdfPath: msg.pdf_path || null,
-        sessionId: sessionId,
-        messageId: `${sessionId}-${index}`,
+        messageId: `${runId}-${index}`,
         previousMessage: index > 0 ? history[index - 1].content : undefined
       }));
       
@@ -109,14 +107,14 @@ const Index = () => {
   const handleUserMessage = (userMessage: string) => {
     if (!userId) return;
     
-    const messageId = `${currentSessionId}-${Date.now()}-user`;
-    console.log('Adding user message:', { messageId, sessionId: currentSessionId });
+    const messageId = `${currentRunId}-${Date.now()}-user`;
+    console.log('Adding user message:', { messageId, runId: currentRunId });
     
     setMessages(prev => [...prev, { 
       content: userMessage, 
       isUser: true,
       messageId,
-      sessionId: currentSessionId,
+      runId: currentRunId,
       userId
     }]);
   };
@@ -129,12 +127,12 @@ const Index = () => {
   ) => {
     if (!userId) return;
     
-    const messageId = `${currentSessionId}-${Date.now()}-ai`;
+    const messageId = `${currentRunId}-${Date.now()}-ai`;
     const previousMessage = messages[messages.length - 1]?.content;
     
     console.log('Adding AI response:', { 
       messageId, 
-      sessionId: currentSessionId,
+      runId: currentRunId,
       hasPreviousMessage: !!previousMessage 
     });
     
@@ -145,9 +143,8 @@ const Index = () => {
         isUser: false, 
         sources, 
         userId, 
-        runId,
+        runId: currentRunId, // Use the current run ID instead of the one from the response
         pdfPath,
-        sessionId: currentSessionId,
         messageId,
         previousMessage
       }
@@ -163,7 +160,7 @@ const Index = () => {
     <div className="flex h-screen bg-background">
       <ChatSidebar 
         onChatSelect={handleChatSelect}
-        selectedChat={currentSessionId}
+        selectedChat={currentRunId}
       />
       
       <div className="flex-1 flex flex-col">

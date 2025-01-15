@@ -25,21 +25,23 @@ serve(async (req) => {
       throw new Error('No user found')
     }
 
-    const { name } = await req.json()
-    const { data, error } = await supabaseClient.functions.invoke('get-secret', {
-      body: { name }
-    })
+    // Get the API token directly from environment variables
+    const apiToken = Deno.env.get('API_TOKEN')
+    if (!apiToken) {
+      throw new Error('API token not found')
+    }
 
-    if (error) throw error
+    console.log('Successfully retrieved API token')
 
     return new Response(
-      JSON.stringify({ secret: data.secret }),
+      JSON.stringify({ secret: apiToken }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
       },
     )
   } catch (error) {
+    console.error('Error in get-api-token function:', error.message)
     return new Response(
       JSON.stringify({ error: error.message }),
       {

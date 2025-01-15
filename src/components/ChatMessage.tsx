@@ -43,8 +43,9 @@ export const ChatMessage = ({
     sessionId, 
     messageId, 
     previousMessage,
-    userId 
-  }); // Enhanced debug log
+    userId,
+    content // Add content to debug log
+  });
 
   return (
     <div className={cn(
@@ -86,13 +87,13 @@ export const ChatMessage = ({
           </div>
         )}
 
-        {!isUser && sessionId && (
+        {!isUser && sessionId && userId && (
           <StarRating
             messageId={messageId || ''}
             sessionId={sessionId}
             aiMessage={content}
             userMessage={previousMessage}
-            userId={userId || ''}
+            userId={userId}
           />
         )}
       </div>

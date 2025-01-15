@@ -42,17 +42,18 @@ export const ChatInput = ({ onSendMessage, onResponse, setIsTyping }: ChatInputP
     e.preventDefault();
     if (!message.trim() || !userId) return;
 
+    const currentMessage = message.trim(); // Store message before clearing
     setIsLoading(true);
     setIsTyping(true);
     
     try {
-      // Immediately show user message
-      onSendMessage(message);
+      // Immediately show user message and pass it through
+      onSendMessage(currentMessage);
       
       const runId = crypto.randomUUID();
-      const response = await sendChatMessage(message, userId, runId);
+      const response = await sendChatMessage(currentMessage, userId, runId);
       
-      // Add AI response after it's received
+      // Add AI response after it's received, passing the user's message
       onResponse(response.response, response.sources, runId, response.pdf_path);
       setMessage("");
     } catch (error) {

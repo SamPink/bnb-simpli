@@ -30,7 +30,7 @@ interface Message {
   runId?: string;
   pdfPath?: string | null;
   sessionId?: string;
-  messageId?: string;  // Add messageId to the interface
+  messageId?: string;
 }
 
 const Index = () => {
@@ -44,12 +44,14 @@ const Index = () => {
                "• A file download feature is available for PDF documents containing the source of information.\n\n" +
                "Important: In this demo, some functionalities are disabled.", 
       isUser: false,
-      messageId: 'welcome-message'  // Add a messageId for the welcome message
+      messageId: 'welcome-message',
+      sessionId: 'welcome'
     },
   ]);
   const [userId, setUserId] = useState<string | null>(null);
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
+  const [currentSessionId, setCurrentSessionId] = useState<string>(crypto.randomUUID());
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -84,33 +86,22 @@ const Index = () => {
     
     console.log('Loading chat history for session:', sessionId);
     setSelectedChat(sessionId);
+    setCurrentSessionId(sessionId); // Update current session ID when selecting a chat
     
     try {
       const history = await getChatHistory(sessionId, userId);
       console.log('Received chat history:', history);
       
-      const formattedMessages: Message[] = history.map((msg, index) => {
-        console.log('Formatting message:', msg);
-        let sources = msg.sources;
-        
-        if ((!sources || !sources.length) && msg.role === 'assistant') {
-          sources = parseSourcesFromContent(msg.content);
-          if (sources.length > 0) {
-            msg.content = msg.content.replace(/<sources>.*?<\/sources>/s, '').trim();
-          }
-        }
-
-        return {
-          content: msg.content,
-          isUser: msg.role === 'user',
-          sources: sources || [],
-          userId: userId,
-          runId: sessionId,
-          pdfPath: msg.pdf_path || null,
-          sessionId: sessionId,
-          messageId: `${sessionId}-${index}`  // Generate a unique messageId for each message
-        };
-      });
+      const formattedMessages: Message[] = history.map((msg, index) => ({
+        content: msg.content,
+        isUser: msg.role === 'user',
+        sources: msg.sources || parseSourcesFromContent(msg.content),
+        userId: userId,
+        runId: sessionId,
+        pdfPath: msg.pdf_path || null,
+        sessionId: sessionId,
+        messageId: `${sessionId}-${index}`
+      }));
       
       console.log('Formatted messages:', formattedMessages);
       setMessages(formattedMessages);
@@ -126,11 +117,19 @@ const Index = () => {
 
   const handleUserMessage = (userMessage: string) => {
     if (!userId) return;
+    
+    // If no chat is selected, create a new session
+    if (!selectedChat) {
+      const newSessionId = crypto.randomUUID();
+      setSelectedChat(newSessionId);
+      setCurrentSessionId(newSessionId);
+    }
+    
     setMessages(prev => [...prev, { 
       content: userMessage, 
       isUser: true,
-      messageId: `${selectedChat}-${Date.now()}-user`,  // Add unique messageId
-      sessionId: selectedChat || undefined
+      messageId: `${currentSessionId}-${Date.now()}-user`,
+      sessionId: currentSessionId // Use current session ID
     }]);
   };
 
@@ -142,6 +141,7 @@ const Index = () => {
   ) => {
     if (!userId) return;
     console.log('Handling AI response:', { apiResponse, sources, runId, pdfPath });
+    
     setMessages(prev => [
       ...prev,
       { 
@@ -151,8 +151,8 @@ const Index = () => {
         userId, 
         runId,
         pdfPath,
-        sessionId: selectedChat || undefined,
-        messageId: `${runId}-${Date.now()}-ai`  // Add unique messageId
+        sessionId: currentSessionId, // Use current session ID
+        messageId: `${currentSessionId}-${Date.now()}-ai`
       }
     ]);
   };
@@ -184,25 +184,14 @@ const Index = () => {
         </header>
         
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {messages.map((message, index) => {
-            // Add debug log for each message's props
-            console.log(`Rendering message ${index}:`, {
-              isUser: message.isUser,
-              userId: message.userId,
-              sessionId: message.sessionId,
-              messageId: message.messageId,
-              hasContent: Boolean(message.content)
-            });
-            
-            return (
-              <ChatMessage 
-                key={message.messageId || index}
-                {...message}
-                userId={userId || undefined}
-                previousMessage={index > 0 ? messages[index - 1].content : undefined}
-              />
-            );
-          })}
+          {messages.map((message, index) => (
+            <ChatMessage 
+              key={message.messageId || index}
+              {...message}
+              userId={userId || undefined}
+              previousMessage={index > 0 ? messages[index - 1].content : undefined}
+            />
+          ))}
           {isTyping && <TypingIndicator />}
         </div>
         

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -14,10 +14,28 @@ export const StarRating = ({ messageId, sessionId, aiMessage, userMessage }: Sta
   const [rating, setRating] = useState<number | null>(null);
   const [hoveredRating, setHoveredRating] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [apiToken, setApiToken] = useState<string | null>(null);
   const { toast } = useToast();
 
+  useEffect(() => {
+    const fetchApiToken = async () => {
+      try {
+        const response = await fetch('/api/get-api-token');
+        if (!response.ok) {
+          throw new Error('Failed to fetch API token');
+        }
+        const data = await response.json();
+        setApiToken(data.token);
+      } catch (error) {
+        console.error('Error fetching API token:', error);
+      }
+    };
+
+    fetchApiToken();
+  }, []);
+
   const handleRating = async (selectedRating: number) => {
-    if (isSubmitting) return;
+    if (isSubmitting || !apiToken) return;
     
     setIsSubmitting(true);
     console.log('Submitting rating:', selectedRating);
@@ -27,7 +45,7 @@ export const StarRating = ({ messageId, sessionId, aiMessage, userMessage }: Sta
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer testuser',
+          'Authorization': `Bearer ${apiToken}`,
           'ngrok-skip-browser-warning': '1',
         },
         body: JSON.stringify({

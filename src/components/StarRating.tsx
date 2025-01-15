@@ -9,9 +9,10 @@ interface StarRatingProps {
   sessionId: string;
   aiMessage: string;
   userMessage?: string;
+  userId: string;
 }
 
-export const StarRating = ({ messageId, sessionId, aiMessage, userMessage }: StarRatingProps) => {
+export const StarRating = ({ messageId, sessionId, aiMessage, userMessage, userId }: StarRatingProps) => {
   const [hoveredRating, setHoveredRating] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
@@ -25,6 +26,7 @@ export const StarRating = ({ messageId, sessionId, aiMessage, userMessage }: Sta
     console.log('User message:', userMessage);
     console.log('AI message:', aiMessage);
     console.log('Rating:', selectedRating);
+    console.log('User ID:', userId);
 
     try {
       // Get API token from Supabase Function
@@ -46,7 +48,7 @@ export const StarRating = ({ messageId, sessionId, aiMessage, userMessage }: Sta
           'X-API-Token': data.secret,
         },
         body: JSON.stringify({
-          user_id: messageId,
+          user_id: userId,
           session_id: sessionId,
           user_message: userMessage || '',
           ai_message: aiMessage,

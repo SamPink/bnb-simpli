@@ -42,7 +42,8 @@ export const ChatMessage = ({
     isUser, 
     sessionId, 
     messageId, 
-    previousMessage 
+    previousMessage,
+    userId 
   }); // Enhanced debug log
 
   return (
@@ -91,6 +92,7 @@ export const ChatMessage = ({
             sessionId={sessionId}
             aiMessage={content}
             userMessage={previousMessage}
+            userId={userId || ''}
           />
         )}
       </div>

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Star } from 'lucide-react';
+import { Star, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface StarRatingProps {
   messageId: string;
@@ -14,38 +15,24 @@ export const StarRating = ({ messageId, sessionId, aiMessage, userMessage }: Sta
   const [rating, setRating] = useState<number | null>(null);
   const [hoveredRating, setHoveredRating] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [apiToken, setApiToken] = useState<string | null>(null);
   const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchApiToken = async () => {
-      try {
-        const response = await fetch('/api/get-api-token');
-        if (!response.ok) {
-          throw new Error('Failed to fetch API token');
-        }
-        const data = await response.json();
-        setApiToken(data.token);
-      } catch (error) {
-        console.error('Error fetching API token:', error);
-      }
-    };
-
-    fetchApiToken();
-  }, []);
-
   const handleRating = async (selectedRating: number) => {
-    if (isSubmitting || !apiToken) return;
+    if (isSubmitting) return;
     
     setIsSubmitting(true);
     console.log('Submitting rating:', selectedRating);
 
     try {
+      // Get the session user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No authenticated user found');
+
+      // Call the feedback endpoint
       const response = await fetch('https://d892-2a02-c7c-d4e8-f300-6dee-b3fa-8bc1-7d8.ngrok-free.app/feedback', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiToken}`,
           'ngrok-skip-browser-warning': '1',
         },
         body: JSON.stringify({
@@ -89,22 +76,33 @@ export const StarRating = ({ messageId, sessionId, aiMessage, userMessage }: Sta
           onMouseLeave={() => setHoveredRating(null)}
           disabled={rating !== null || isSubmitting}
           className={cn(
-            "transition-all duration-200 disabled:cursor-default",
+            "transition-all duration-200",
             rating || hoveredRating 
               ? "hover:scale-110 active:scale-95" 
-              : "opacity-50 hover:opacity-100"
+              : "opacity-50 hover:opacity-100",
+            "disabled:cursor-not-allowed"
           )}
+          aria-label={`Rate ${star} stars`}
         >
-          <Star
-            className={cn(
-              "w-5 h-5",
-              (hoveredRating !== null ? star <= hoveredRating : star <= (rating || 0))
-                ? "fill-primary text-primary"
-                : "fill-none text-muted-foreground"
-            )}
-          />
+          {isSubmitting ? (
+            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+          ) : (
+            <Star
+              className={cn(
+                "w-5 h-5",
+                (hoveredRating !== null ? star <= hoveredRating : star <= (rating || 0))
+                  ? "fill-primary text-primary"
+                  : "fill-none text-muted-foreground"
+              )}
+            />
+          )}
         </button>
       ))}
+      {rating && (
+        <span className="ml-2 text-sm text-muted-foreground">
+          Thank you for your feedback!
+        </span>
+      )}
     </div>
   );
 };

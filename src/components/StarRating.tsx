@@ -48,11 +48,10 @@ export const StarRating = ({ messageId, sessionId, aiMessage, userMessage, userI
         throw new Error('Failed to get API token');
       }
 
-      const response = await fetch('https://0381-2a02-c7c-d4e8-f300-6dee-b3fa-8bc1-7d8.ngrok-free.app/feedback', {
+      const response = await fetch('https://bnb.gentlesand-b0965d81.westeurope.azurecontainerapps.io/feedback', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'ngrok-skip-browser-warning': '1',
           'X-API-Token': data.secret,
         },
         body: JSON.stringify({

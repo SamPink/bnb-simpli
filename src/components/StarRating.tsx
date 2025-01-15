@@ -48,7 +48,7 @@ export const StarRating = ({ messageId, sessionId, aiMessage, userMessage, userI
         throw new Error('Failed to get API token');
       }
 
-      const response = await fetch('https://d892-2a02-c7c-d4e8-f300-6dee-b3fa-8bc1-7d8.ngrok-free.app/feedback', {
+      const response = await fetch('https://0381-2a02-c7c-d4e8-f300-6dee-b3fa-8bc1-7d8.ngrok-free.app/feedback', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -22,6 +22,7 @@ export const StarRating = ({ messageId, sessionId, aiMessage, userMessage }: Sta
     
     setIsSubmitting(true);
     console.log('Submitting rating for message:', messageId, 'Rating:', selectedRating);
+    console.log('User message being submitted:', userMessage);
 
     try {
       // Get API token from Supabase Function
@@ -77,7 +78,7 @@ export const StarRating = ({ messageId, sessionId, aiMessage, userMessage }: Sta
   };
 
   return (
-    <div className="flex items-center gap-1 mt-4">
+    <div className="flex items-center gap-1 mt-4" data-message-id={messageId}>
       {[1, 2, 3, 4, 5].map((star) => (
         <button
           key={star}

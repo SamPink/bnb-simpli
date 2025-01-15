@@ -38,14 +38,14 @@ export const ChatMessage = ({
   previousMessage,
   messageId
 }: ChatMessageProps) => {
-  console.log('ChatMessage render:', { 
+  // Add debug logs to help track the conditions for showing star rating
+  console.log('ChatMessage props:', { 
     isUser, 
+    userId, 
     sessionId, 
     messageId, 
-    previousMessage,
-    userId,
-    content,
-    showStarRating: !isUser && sessionId && userId // Log whether stars should show
+    hasContent: Boolean(content),
+    showStarRating: !isUser && sessionId && userId && messageId
   });
 
   // Only show star rating for AI messages when we have all required props
@@ -95,7 +95,7 @@ export const ChatMessage = ({
           <div className="mt-4 pt-4 border-t border-border/30">
             <StarRating
               messageId={messageId}
-              sessionId={sessionId || ''}
+              sessionId={sessionId}
               aiMessage={content}
               userMessage={previousMessage}
               userId={userId}

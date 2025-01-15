@@ -34,29 +34,29 @@ const Login = () => {
   return (
     <div className="min-h-screen flex flex-col bg-[#1C2127]">
       {/* Top Logo Section */}
-      <div className="w-full py-8 flex justify-center border-b border-border/10">
+      <div className="w-full py-6 flex justify-center border-b border-white/[0.06]">
         <img 
           src="https://brownandbrown.simpliautomation.com/assets/bravo-networks-logo-DMrGQqwm.png"
           alt="Bravo Networks Logo"
-          className="h-14 object-contain"
+          className="h-12 object-contain"
         />
       </div>
 
       {/* Main Content Section */}
       <div className="flex-1 flex items-center justify-center px-6">
-        <div className="w-full max-w-md space-y-8">
-          <div className="text-center space-y-4">
-            <h1 className="text-3xl font-semibold text-foreground tracking-tight">
+        <div className="w-full max-w-[420px] space-y-10">
+          <div className="text-center space-y-3">
+            <h1 className="text-[32px] font-semibold text-white tracking-tight">
               Welcome to Support Desk
             </h1>
-            <p className="text-lg text-muted-foreground">
+            <p className="text-[18px] text-white/60">
               Sign in to access the Brown & Brown Support Desk Agent
             </p>
           </div>
 
           <Button 
             onClick={signInWithAzure}
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-6 text-lg font-medium"
+            className="w-full bg-[#2B303B] hover:bg-[#2B303B]/90 text-white py-7 text-[16px] font-medium border border-white/[0.06]"
             size="lg"
           >
             Sign in with Azure
@@ -65,13 +65,13 @@ const Login = () => {
       </div>
 
       {/* Footer Section */}
-      <div className="w-full py-8 flex flex-col items-center border-t border-border/10 mt-auto">
+      <div className="w-full py-8 flex flex-col items-center border-t border-white/[0.06] mt-auto">
         <img 
           src="https://brownandbrown.simpliautomation.com/assets/SimpliLogo.svg"
           alt="Simpli Logo"
-          className="h-10 object-contain mb-4"
+          className="h-8 object-contain mb-4"
         />
-        <p className="text-sm text-muted-foreground">© 2024 Simpli</p>
+        <p className="text-sm text-white/40">© 2024 Simpli</p>
       </div>
     </div>
   );

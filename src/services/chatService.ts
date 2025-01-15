@@ -28,21 +28,31 @@ interface ChatSession {
   created_at: string;
 }
 
-const API_BASE_URL = 'https://bnb.gentlesand-b0965d81.westeurope.azurecontainerapps.io';
+const API_BASE_URL = 'https://d892-2a02-c7c-d4e8-f300-6dee-b3fa-8bc1-7d8.ngrok-free.app';
 
-const API_HEADERS = {
-  'accept': 'application/json',
-  'Content-Type': 'application/json',
-  'Authorization': 'Bearer testuser',
-  'ngrok-skip-browser-warning': '1'
+const getApiHeaders = async () => {
+  const { data: { secret }, error } = await supabase.functions.secrets.get('API_TOKEN');
+  if (error) {
+    console.error('Error fetching API token:', error);
+    throw new Error('Failed to get API token');
+  }
+
+  return {
+    'accept': 'application/json',
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer testuser',
+    'ngrok-skip-browser-warning': '1',
+    'X-API-Token': secret,
+  };
 };
 
 export const sendChatMessage = async (message: string, userId: string, runId: string): Promise<ChatResponse> => {
   console.log('Sending chat message:', { message, userId, runId });
   
+  const headers = await getApiHeaders();
   const response = await fetch(`${API_BASE_URL}/chat`, {
     method: 'POST',
-    headers: API_HEADERS,
+    headers,
     body: JSON.stringify({
       message,
       run_id: runId,
@@ -63,8 +73,9 @@ export const sendChatMessage = async (message: string, userId: string, runId: st
 export const getChatSessions = async (userId: string): Promise<ChatSession[]> => {
   console.log('Fetching chat sessions for user:', userId);
   
+  const headers = await getApiHeaders();
   const response = await fetch(`${API_BASE_URL}/chats?user_id=${userId}`, {
-    headers: API_HEADERS,
+    headers,
   });
 
   if (!response.ok) {
@@ -80,8 +91,9 @@ export const getChatSessions = async (userId: string): Promise<ChatSession[]> =>
 export const getChatHistory = async (chatId: string, userId: string): Promise<ChatHistoryMessage[]> => {
   console.log('Fetching chat history:', { chatId, userId });
   
+  const headers = await getApiHeaders();
   const response = await fetch(`${API_BASE_URL}/chats/${chatId}?user_id=${userId}`, {
-    headers: API_HEADERS,
+    headers,
   });
 
   if (!response.ok) {
@@ -97,9 +109,10 @@ export const getChatHistory = async (chatId: string, userId: string): Promise<Ch
 export const downloadPdf = async (userId: string, runId: string): Promise<Blob> => {
   console.log('Downloading PDF:', { userId, runId });
   
+  const headers = await getApiHeaders();
   const response = await fetch(`${API_BASE_URL}/download_pdf?user_id=${userId}&run_id=${runId}`, {
     headers: {
-      ...API_HEADERS,
+      ...headers,
       'accept': 'application/pdf',
     },
   });

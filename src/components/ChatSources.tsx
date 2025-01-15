@@ -1,15 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { Eye } from "lucide-react";
+import { Download } from "lucide-react";
 import { downloadPdf } from "@/services/chatService";
 import { useToast } from "@/hooks/use-toast";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { useState } from "react";
-import { Document, Page, pdfjs } from 'react-pdf';
-import 'react-pdf/dist/Page/AnnotationLayer.css';
-import 'react-pdf/dist/Page/TextLayer.css';
-
-// Set up PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
 interface Source {
   document: string;
@@ -32,25 +24,26 @@ interface ChatSourcesProps {
 
 export const ChatSources = ({ sources, userId, runId, pdfPath }: ChatSourcesProps) => {
   const { toast } = useToast();
-  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
-  const [numPages, setNumPages] = useState<number | null>(null);
 
-  const handleViewPdf = async () => {
+  const handleDownloadPdf = async () => {
     try {
       const blob = await downloadPdf(userId, runId);
-      setPdfBlob(blob);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${runId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
     } catch (error) {
-      console.error('Error loading PDF:', error);
+      console.error('Error downloading PDF:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to load PDF. Please try again.",
+        description: "Failed to download PDF. Please try again.",
       });
     }
-  };
-
-  const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
-    setNumPages(numPages);
   };
 
   if (!sources.length) return null;
@@ -70,37 +63,15 @@ export const ChatSources = ({ sources, userId, runId, pdfPath }: ChatSourcesProp
         ))}
       </div>
       {pdfPath && (
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2"
-              onClick={handleViewPdf}
-            >
-              <Eye className="h-4 w-4" />
-              View Highlighted PDF
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="right" className="w-[90%] sm:w-[540px] overflow-y-auto">
-            {pdfBlob && (
-              <Document
-                file={URL.createObjectURL(pdfBlob)}
-                onLoadSuccess={onDocumentLoadSuccess}
-                className="pdf-document"
-              >
-                {Array.from(new Array(numPages), (_, index) => (
-                  <Page
-                    key={`page_${index + 1}`}
-                    pageNumber={index + 1}
-                    className="mb-4"
-                    width={Math.min(window.innerWidth * 0.8, 540)}
-                  />
-                ))}
-              </Document>
-            )}
-          </SheetContent>
-        </Sheet>
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2"
+          onClick={handleDownloadPdf}
+        >
+          <Download className="h-4 w-4" />
+          Download PDF
+        </Button>
       )}
     </div>
   );

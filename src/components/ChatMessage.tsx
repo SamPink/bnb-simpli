@@ -21,9 +21,18 @@ interface ChatMessageProps {
   userId?: string;
   runId?: string;
   pdfPath?: string | null;
+  sessionId?: string;  // Add sessionId prop
 }
 
-export const ChatMessage = ({ content, isUser, sources = [], userId, runId, pdfPath }: ChatMessageProps) => {
+export const ChatMessage = ({ 
+  content, 
+  isUser, 
+  sources = [], 
+  userId, 
+  runId, 
+  pdfPath,
+  sessionId  // Add sessionId to props
+}: ChatMessageProps) => {
   return (
     <div className={cn(
       "flex w-full",
@@ -53,12 +62,12 @@ export const ChatMessage = ({ content, isUser, sources = [], userId, runId, pdfP
           {content}
         </ReactMarkdown>
         
-        {!isUser && sources.length > 0 && userId && runId && (
+        {!isUser && sources.length > 0 && userId && (
           <div className="mt-4 pt-4 border-t border-border/30">
             <ChatSources
               sources={sources}
               userId={userId}
-              runId={runId}
+              runId={runId || sessionId}  // Use sessionId as fallback
               pdfPath={pdfPath}
             />
           </div>

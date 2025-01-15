@@ -18,15 +18,27 @@ interface Source {
 interface ChatSourcesProps {
   sources: Source[];
   userId: string;
-  runId: string;
+  runId?: string;  // Make runId optional
   pdfPath: string | null;
 }
 
 export const ChatSources = ({ sources, userId, runId, pdfPath }: ChatSourcesProps) => {
   const { toast } = useToast();
+  console.log('ChatSources props:', { sources, userId, runId, pdfPath });
 
   const handleDownloadPdf = async () => {
+    if (!runId) {
+      console.error('No runId available for PDF download');
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Unable to download PDF. Missing conversation ID.",
+      });
+      return;
+    }
+
     try {
+      console.log('Attempting to download PDF:', { userId, runId });
       const blob = await downloadPdf(userId, runId);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -62,7 +74,7 @@ export const ChatSources = ({ sources, userId, runId, pdfPath }: ChatSourcesProp
           </div>
         ))}
       </div>
-      {pdfPath && (
+      {(pdfPath || sources.length > 0) && runId && (
         <Button
           variant="outline"
           size="sm"

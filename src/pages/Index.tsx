@@ -29,6 +29,7 @@ interface Message {
   userId?: string;
   runId?: string;
   pdfPath?: string | null;
+  sessionId?: string;  // Add sessionId prop
 }
 
 const Index = () => {
@@ -105,7 +106,8 @@ const Index = () => {
           sources: sources || [],
           userId: userId,
           runId: sessionId,
-          pdfPath: msg.pdf_path || null
+          pdfPath: msg.pdf_path || null,
+          sessionId: sessionId  // Add sessionId to the message
         };
       });
       
@@ -175,7 +177,11 @@ const Index = () => {
         
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {messages.map((message, index) => (
-            <ChatMessage key={index} {...message} />
+            <ChatMessage 
+              key={index} 
+              {...message} 
+              sessionId={selectedChat || undefined}  // Pass sessionId to ChatMessage
+            />
           ))}
           {isTyping && <TypingIndicator />}
         </div>

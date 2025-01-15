@@ -24,16 +24,17 @@ export const StarRating = ({ messageId, sessionId, aiMessage, userMessage }: Sta
     console.log('Submitting rating:', selectedRating);
 
     try {
-      // Get the session user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No authenticated user found');
+      // Get the current session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No authenticated session found');
 
-      // Call the feedback endpoint
+      // Call the feedback endpoint with auth token
       const response = await fetch('https://d892-2a02-c7c-d4e8-f300-6dee-b3fa-8bc1-7d8.ngrok-free.app/feedback', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'ngrok-skip-browser-warning': '1',
+          'Authorization': `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           user_id: messageId,
@@ -46,7 +47,8 @@ export const StarRating = ({ messageId, sessionId, aiMessage, userMessage }: Sta
       });
 
       if (!response.ok) {
-        throw new Error('Failed to submit rating');
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to submit rating');
       }
 
       setRating(selectedRating);

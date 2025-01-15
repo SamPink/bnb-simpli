@@ -49,19 +49,20 @@ const Index = () => {
   const { toast } = useToast();
   const [messages, setMessages] = useState<Message[]>([WELCOME_MESSAGE]);
   const [userId, setUserId] = useState<string | null>(null);
-  const [currentRunId, setCurrentRunId] = useState<string>(() => {
-    // Try to get the runId from localStorage, or generate a new one
-    const storedRunId = localStorage.getItem('currentRunId');
-    console.log('Initial runId from storage:', storedRunId);
-    return storedRunId || crypto.randomUUID();
-  });
   const [isTyping, setIsTyping] = useState(false);
-
-  // Persist runId to localStorage whenever it changes
-  useEffect(() => {
-    console.log('Persisting runId to storage:', currentRunId);
-    localStorage.setItem('currentRunId', currentRunId);
-  }, [currentRunId]);
+  
+  // Initialize currentRunId from localStorage or create new one
+  const [currentRunId, setCurrentRunId] = useState<string>(() => {
+    const storedRunId = localStorage.getItem('currentRunId');
+    if (storedRunId && storedRunId !== 'welcome') {
+      console.log('Restoring previous conversation runId:', storedRunId);
+      return storedRunId;
+    }
+    const newRunId = crypto.randomUUID();
+    console.log('Creating new conversation runId:', newRunId);
+    localStorage.setItem('currentRunId', newRunId);
+    return newRunId;
+  });
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -78,13 +79,16 @@ const Index = () => {
     if (!runId) {
       // Starting a new conversation
       const newRunId = crypto.randomUUID();
-      console.log('Starting new conversation with run ID:', newRunId);
+      console.log('Starting new conversation with runId:', newRunId);
+      localStorage.setItem('currentRunId', newRunId);
       setCurrentRunId(newRunId);
-      setMessages([WELCOME_MESSAGE]); // Keep welcome message only
+      setMessages([WELCOME_MESSAGE]);
       return;
     }
     
-    console.log('Loading chat history for run ID:', runId);
+    // Loading existing conversation
+    console.log('Loading existing conversation with runId:', runId);
+    localStorage.setItem('currentRunId', runId);
     setCurrentRunId(runId);
     
     try {
@@ -96,7 +100,7 @@ const Index = () => {
         isUser: msg.role === 'user',
         sources: msg.sources,
         userId: userId,
-        runId: runId,
+        runId: runId, // Use the selected conversation's runId
         pdfPath: msg.pdf_path || null,
         messageId: `${runId}-${index}`,
         previousMessage: index > 0 ? history[index - 1].content : undefined
@@ -131,7 +135,7 @@ const Index = () => {
   const handleAIResponse = (
     apiResponse: string, 
     sources: Source[] = [], 
-    _runId: string, // Ignore the runId from the response
+    _runId: string, // Ignore the API's runId, use our currentRunId
     pdfPath: string | null = null
   ) => {
     if (!userId) return;
@@ -152,7 +156,7 @@ const Index = () => {
         isUser: false, 
         sources, 
         userId, 
-        runId: currentRunId,
+        runId: currentRunId, // Always use current conversation's runId
         pdfPath,
         messageId,
         previousMessage

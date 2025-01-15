@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Star, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -18,10 +18,10 @@ export const StarRating = ({ messageId, sessionId, aiMessage, userMessage }: Sta
   const { toast } = useToast();
 
   const handleRating = async (selectedRating: number) => {
-    if (isSubmitting) return;
+    if (isSubmitting || rating !== null) return;
     
     setIsSubmitting(true);
-    console.log('Submitting rating:', selectedRating);
+    console.log('Submitting rating for message:', messageId, 'Rating:', selectedRating);
 
     try {
       // Get API token from Supabase Function
@@ -69,6 +69,8 @@ export const StarRating = ({ messageId, sessionId, aiMessage, userMessage }: Sta
         description: "Failed to submit rating. Please try again.",
         variant: "destructive",
       });
+      // Reset rating state on error so user can try again
+      setRating(null);
     } finally {
       setIsSubmitting(false);
     }

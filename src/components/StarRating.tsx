@@ -12,19 +12,20 @@ interface StarRatingProps {
 }
 
 export const StarRating = ({ messageId, sessionId, aiMessage, userMessage }: StarRatingProps) => {
-  const [ratings, setRatings] = useState<Record<string, number | null>>({});
+  const [rating, setRating] = useState<number | null>(null);
   const [hoveredRating, setHoveredRating] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  const currentRating = ratings[messageId] || null;
-
   const handleRating = async (selectedRating: number) => {
-    if (isSubmitting || currentRating !== null) return;
+    if (isSubmitting || rating !== null) return;
     
     setIsSubmitting(true);
-    console.log('Submitting rating for message:', messageId, 'Rating:', selectedRating);
-    console.log('User message being submitted:', userMessage);
+    console.log('Submitting feedback for message:', messageId);
+    console.log('Session ID:', sessionId);
+    console.log('User message:', userMessage);
+    console.log('AI message:', aiMessage);
+    console.log('Rating:', selectedRating);
 
     try {
       // Get API token from Supabase Function
@@ -60,10 +61,7 @@ export const StarRating = ({ messageId, sessionId, aiMessage, userMessage }: Sta
         throw new Error(errorData.detail || 'Failed to submit rating');
       }
 
-      setRatings(prev => ({
-        ...prev,
-        [messageId]: selectedRating
-      }));
+      setRating(selectedRating);
       
       toast({
         title: "Rating submitted",
@@ -76,11 +74,7 @@ export const StarRating = ({ messageId, sessionId, aiMessage, userMessage }: Sta
         description: "Failed to submit rating. Please try again.",
         variant: "destructive",
       });
-      // Reset rating state on error
-      setRatings(prev => ({
-        ...prev,
-        [messageId]: null
-      }));
+      setRating(null);
     } finally {
       setIsSubmitting(false);
     }
@@ -94,10 +88,10 @@ export const StarRating = ({ messageId, sessionId, aiMessage, userMessage }: Sta
           onClick={() => handleRating(star)}
           onMouseEnter={() => setHoveredRating(star)}
           onMouseLeave={() => setHoveredRating(null)}
-          disabled={currentRating !== null || isSubmitting}
+          disabled={rating !== null || isSubmitting}
           className={cn(
             "transition-all duration-200",
-            currentRating || hoveredRating 
+            rating || hoveredRating 
               ? "hover:scale-110 active:scale-95" 
               : "opacity-50 hover:opacity-100",
             "disabled:cursor-not-allowed"
@@ -110,7 +104,7 @@ export const StarRating = ({ messageId, sessionId, aiMessage, userMessage }: Sta
             <Star
               className={cn(
                 "w-5 h-5",
-                (hoveredRating !== null ? star <= hoveredRating : star <= (currentRating || 0))
+                (hoveredRating !== null ? star <= hoveredRating : star <= (rating || 0))
                   ? "fill-primary text-primary"
                   : "fill-none text-muted-foreground"
               )}
@@ -118,7 +112,7 @@ export const StarRating = ({ messageId, sessionId, aiMessage, userMessage }: Sta
           )}
         </button>
       ))}
-      {currentRating && (
+      {rating && (
         <span className="ml-2 text-sm text-muted-foreground">
           Thank you for your feedback!
         </span>

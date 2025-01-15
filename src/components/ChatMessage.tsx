@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { ChatSources } from "./ChatSources";
 import ReactMarkdown from 'react-markdown';
+import { StarRating } from "./StarRating";
 
 interface Source {
   document: string;
@@ -21,7 +22,7 @@ interface ChatMessageProps {
   userId?: string;
   runId?: string;
   pdfPath?: string | null;
-  sessionId?: string;  // Add sessionId prop
+  sessionId?: string;
 }
 
 export const ChatMessage = ({ 
@@ -31,7 +32,7 @@ export const ChatMessage = ({
   userId, 
   runId, 
   pdfPath,
-  sessionId  // Add sessionId to props
+  sessionId
 }: ChatMessageProps) => {
   return (
     <div className={cn(
@@ -67,10 +68,18 @@ export const ChatMessage = ({
             <ChatSources
               sources={sources}
               userId={userId}
-              runId={runId || sessionId}  // Use sessionId as fallback
+              runId={runId || sessionId}
               pdfPath={pdfPath}
             />
           </div>
+        )}
+
+        {!isUser && sessionId && (
+          <StarRating
+            messageId={userId || ''}
+            sessionId={sessionId}
+            aiMessage={content}
+          />
         )}
       </div>
     </div>

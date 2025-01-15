@@ -24,7 +24,7 @@ interface ChatMessageProps {
   pdfPath?: string | null;
   sessionId?: string;
   previousMessage?: string;
-  messageId?: string; // Add messageId prop
+  messageId?: string;
 }
 
 export const ChatMessage = ({ 
@@ -36,8 +36,10 @@ export const ChatMessage = ({
   pdfPath,
   sessionId,
   previousMessage,
-  messageId // Add messageId to destructuring
+  messageId
 }: ChatMessageProps) => {
+  console.log('ChatMessage props:', { isUser, sessionId, messageId }); // Debug log
+
   return (
     <div className={cn(
       "flex w-full",
@@ -78,9 +80,9 @@ export const ChatMessage = ({
           </div>
         )}
 
-        {!isUser && sessionId && messageId && ( // Add messageId check
+        {!isUser && sessionId && (
           <StarRating
-            messageId={messageId}
+            messageId={messageId || userId || ''}
             sessionId={sessionId}
             aiMessage={content}
             userMessage={previousMessage}

@@ -17,19 +17,28 @@ export const StarRating = ({ messageId, sessionId, aiMessage, userMessage, userI
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
+  console.log('StarRating render:', {
+    messageId,
+    sessionId,
+    userId,
+    hasUserMessage: Boolean(userMessage),
+    hasAiMessage: Boolean(aiMessage)
+  });
+
   const handleRating = async (selectedRating: number) => {
     if (isSubmitting) return;
     
     setIsSubmitting(true);
-    console.log('Submitting feedback for message:', messageId);
-    console.log('Session ID:', sessionId);
-    console.log('User message:', userMessage);
-    console.log('AI message:', aiMessage);
-    console.log('Rating:', selectedRating);
-    console.log('User ID:', userId);
+    console.log('Submitting feedback:', {
+      messageId,
+      sessionId,
+      userId,
+      rating: selectedRating,
+      hasUserMessage: Boolean(userMessage),
+      hasAiMessage: Boolean(aiMessage)
+    });
 
     try {
-      // Get API token from Supabase Function
       const { data, error } = await supabase.functions.invoke('get-api-token', {
         body: { name: 'API_TOKEN' }
       });
@@ -39,7 +48,6 @@ export const StarRating = ({ messageId, sessionId, aiMessage, userMessage, userI
         throw new Error('Failed to get API token');
       }
 
-      // Call the feedback endpoint with the API token
       const response = await fetch('https://d892-2a02-c7c-d4e8-f300-6dee-b3fa-8bc1-7d8.ngrok-free.app/feedback', {
         method: 'POST',
         headers: {
@@ -80,7 +88,7 @@ export const StarRating = ({ messageId, sessionId, aiMessage, userMessage, userI
   };
 
   return (
-    <div className="flex items-center gap-1 mt-4" data-message-id={messageId}>
+    <div className="flex items-center gap-1" data-message-id={messageId}>
       {[1, 2, 3, 4, 5].map((star) => (
         <button
           key={star}

@@ -9,64 +9,38 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      chat_sessions: {
+      message_feedback: {
         Row: {
-          created_at: string
-          id: string
-          title: string | null
+          ai_message: string
+          created_at: string | null
+          id: number
+          rating: number
+          session_id: string
+          timestamp: string | null
           user_id: string
+          user_message: string
         }
         Insert: {
-          created_at?: string
-          id?: string
-          title?: string | null
+          ai_message: string
+          created_at?: string | null
+          id?: number
+          rating: number
+          session_id: string
+          timestamp?: string | null
           user_id: string
+          user_message: string
         }
         Update: {
-          created_at?: string
-          id?: string
-          title?: string | null
+          ai_message?: string
+          created_at?: string | null
+          id?: number
+          rating?: number
+          session_id?: string
+          timestamp?: string | null
           user_id?: string
+          user_message?: string
         }
         Relationships: []
-      }
-      messages: {
-        Row: {
-          content: string
-          created_at: string
-          id: string
-          pdf_path: string | null
-          role: string
-          session_id: string
-          sources: Json | null
-        }
-        Insert: {
-          content: string
-          created_at?: string
-          id?: string
-          pdf_path?: string | null
-          role: string
-          session_id: string
-          sources?: Json | null
-        }
-        Update: {
-          content?: string
-          created_at?: string
-          id?: string
-          pdf_path?: string | null
-          role?: string
-          session_id?: string
-          sources?: Json | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "messages_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "chat_sessions"
-            referencedColumns: ["id"]
-          },
-        ]
       }
     }
     Views: {

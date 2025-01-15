@@ -23,6 +23,7 @@ interface ChatMessageProps {
   runId?: string;
   pdfPath?: string | null;
   sessionId?: string;
+  previousMessage?: string;
 }
 
 export const ChatMessage = ({ 
@@ -32,7 +33,8 @@ export const ChatMessage = ({
   userId, 
   runId, 
   pdfPath,
-  sessionId
+  sessionId,
+  previousMessage
 }: ChatMessageProps) => {
   return (
     <div className={cn(
@@ -79,6 +81,7 @@ export const ChatMessage = ({
             messageId={userId || ''}
             sessionId={sessionId}
             aiMessage={content}
+            userMessage={previousMessage}
           />
         )}
       </div>

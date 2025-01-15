@@ -12,13 +12,15 @@ interface StarRatingProps {
 }
 
 export const StarRating = ({ messageId, sessionId, aiMessage, userMessage }: StarRatingProps) => {
-  const [rating, setRating] = useState<number | null>(null);
+  const [ratings, setRatings] = useState<Record<string, number | null>>({});
   const [hoveredRating, setHoveredRating] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
+  const currentRating = ratings[messageId] || null;
+
   const handleRating = async (selectedRating: number) => {
-    if (isSubmitting || rating !== null) return;
+    if (isSubmitting || currentRating !== null) return;
     
     setIsSubmitting(true);
     console.log('Submitting rating for message:', messageId, 'Rating:', selectedRating);
@@ -58,7 +60,11 @@ export const StarRating = ({ messageId, sessionId, aiMessage, userMessage }: Sta
         throw new Error(errorData.detail || 'Failed to submit rating');
       }
 
-      setRating(selectedRating);
+      setRatings(prev => ({
+        ...prev,
+        [messageId]: selectedRating
+      }));
+      
       toast({
         title: "Rating submitted",
         description: "Thank you for your feedback!",
@@ -70,8 +76,11 @@ export const StarRating = ({ messageId, sessionId, aiMessage, userMessage }: Sta
         description: "Failed to submit rating. Please try again.",
         variant: "destructive",
       });
-      // Reset rating state on error so user can try again
-      setRating(null);
+      // Reset rating state on error
+      setRatings(prev => ({
+        ...prev,
+        [messageId]: null
+      }));
     } finally {
       setIsSubmitting(false);
     }
@@ -85,10 +94,10 @@ export const StarRating = ({ messageId, sessionId, aiMessage, userMessage }: Sta
           onClick={() => handleRating(star)}
           onMouseEnter={() => setHoveredRating(star)}
           onMouseLeave={() => setHoveredRating(null)}
-          disabled={rating !== null || isSubmitting}
+          disabled={currentRating !== null || isSubmitting}
           className={cn(
             "transition-all duration-200",
-            rating || hoveredRating 
+            currentRating || hoveredRating 
               ? "hover:scale-110 active:scale-95" 
               : "opacity-50 hover:opacity-100",
             "disabled:cursor-not-allowed"
@@ -101,7 +110,7 @@ export const StarRating = ({ messageId, sessionId, aiMessage, userMessage }: Sta
             <Star
               className={cn(
                 "w-5 h-5",
-                (hoveredRating !== null ? star <= hoveredRating : star <= (rating || 0))
+                (hoveredRating !== null ? star <= hoveredRating : star <= (currentRating || 0))
                   ? "fill-primary text-primary"
                   : "fill-none text-muted-foreground"
               )}
@@ -109,7 +118,7 @@ export const StarRating = ({ messageId, sessionId, aiMessage, userMessage }: Sta
           )}
         </button>
       ))}
-      {rating && (
+      {currentRating && (
         <span className="ml-2 text-sm text-muted-foreground">
           Thank you for your feedback!
         </span>

@@ -30,7 +30,7 @@ interface ChatSession {
   created_at: string;
 }
 
-const API_BASE_URL = 'https://0381-2a02-c7c-d4e8-f300-6dee-b3fa-8bc1-7d8.ngrok-free.app';
+const API_BASE_URL = 'https://bnb.gentlesand-b0965d81.westeurope.azurecontainerapps.io';
 
 const getApiHeaders = async () => {
   const { data, error } = await supabase.functions.invoke('get-api-token', {
@@ -46,7 +46,6 @@ const getApiHeaders = async () => {
     'accept': 'application/json',
     'Content-Type': 'application/json',
     'Authorization': 'Bearer testuser',
-    'ngrok-skip-browser-warning': '1',
     'X-API-Token': data.secret,
   };
 };

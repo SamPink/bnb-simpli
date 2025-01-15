@@ -52,6 +52,7 @@ export const StarRating = ({ messageId, sessionId, aiMessage, userMessage, userI
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': 'Bearer testuser',
           'X-API-Token': data.secret,
         },
         body: JSON.stringify({

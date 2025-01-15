@@ -18,7 +18,7 @@ interface Source {
 interface ChatSourcesProps {
   sources: Source[];
   userId: string;
-  runId?: string;  // Make runId optional
+  runId?: string;
   pdfPath: string | null;
 }
 
@@ -27,12 +27,12 @@ export const ChatSources = ({ sources, userId, runId, pdfPath }: ChatSourcesProp
   console.log('ChatSources props:', { sources, userId, runId, pdfPath });
 
   const handleDownloadPdf = async () => {
-    if (!runId) {
-      console.error('No runId available for PDF download');
+    if (!runId || !userId) {
+      console.error('Missing required data for PDF download:', { runId, userId });
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Unable to download PDF. Missing conversation ID.",
+        description: "Unable to download PDF. Missing required information.",
       });
       return;
     }
@@ -40,14 +40,24 @@ export const ChatSources = ({ sources, userId, runId, pdfPath }: ChatSourcesProp
     try {
       console.log('Attempting to download PDF:', { userId, runId });
       const blob = await downloadPdf(userId, runId);
+      
+      if (!blob) {
+        throw new Error('No PDF data received');
+      }
+
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${runId}.pdf`;
+      a.download = `conversation-${runId}.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+      
+      toast({
+        title: "Success",
+        description: "PDF downloaded successfully",
+      });
     } catch (error) {
       console.error('Error downloading PDF:', error);
       toast({

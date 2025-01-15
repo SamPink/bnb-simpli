@@ -117,7 +117,7 @@ export const downloadPdf = async (userId: string, runId: string): Promise<Blob> 
   const response = await fetch(`${API_BASE_URL}/download_pdf?user_id=${userId}&run_id=${runId}`, {
     headers: {
       ...headers,
-      'accept': 'application/pdf',
+      'Accept': 'application/pdf',  // Changed 'accept' to 'Accept'
     },
   });
 
@@ -127,6 +127,6 @@ export const downloadPdf = async (userId: string, runId: string): Promise<Blob> 
   }
 
   const blob = await response.blob();
-  console.log('PDF downloaded successfully');
+  console.log('PDF downloaded successfully, blob size:', blob.size);
   return blob;
 };

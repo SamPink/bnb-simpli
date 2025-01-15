@@ -56,6 +56,26 @@ const Index = () => {
     });
   }, []);
 
+  const parseSourcesFromContent = (content: string): Source[] => {
+    const sourcesMatch = content.match(/<sources>(.*?)<\/sources>/s);
+    if (!sourcesMatch) return [];
+
+    const sourceContent = sourcesMatch[1];
+    const source: Source = {
+      document: (sourceContent.match(/<document>(.*?)<\/document>/) || [])[1] || '',
+      page: parseInt((sourceContent.match(/<page>(\d+)<\/page>/) || [])[1] || '0'),
+      paragraph: parseInt((sourceContent.match(/<paragraph>(\d+)<\/paragraph>/) || [])[1] || '0'),
+      text: (sourceContent.match(/<text>(.*?)<\/text>/s) || [])[1] || '',
+      metadata: {
+        size: 0,
+        last_modified: '',
+        file_type: ''
+      }
+    };
+
+    return [source];
+  };
+
   const handleChatSelect = async (sessionId: string) => {
     if (!userId) return;
     
@@ -68,10 +88,21 @@ const Index = () => {
       
       const formattedMessages: Message[] = history.map(msg => {
         console.log('Formatting message:', msg);
+        let sources = msg.sources;
+        
+        // If no sources in the sources field, try to parse them from content
+        if ((!sources || !sources.length) && msg.role === 'assistant') {
+          sources = parseSourcesFromContent(msg.content);
+          // Remove the XML-like source tags from content if sources were found
+          if (sources.length > 0) {
+            msg.content = msg.content.replace(/<sources>.*?<\/sources>/s, '').trim();
+          }
+        }
+
         return {
           content: msg.content,
           isUser: msg.role === 'user',
-          sources: Array.isArray(msg.sources) ? msg.sources : [],
+          sources: sources || [],
           userId: userId,
           runId: sessionId,
           pdfPath: msg.pdf_path || null

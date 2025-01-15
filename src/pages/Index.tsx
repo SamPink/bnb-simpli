@@ -71,7 +71,7 @@ const Index = () => {
         return {
           content: msg.content,
           isUser: msg.role === 'user',
-          sources: msg.sources || [],
+          sources: Array.isArray(msg.sources) ? msg.sources : [],
           userId: userId,
           runId: sessionId,
           pdfPath: msg.pdf_path || null

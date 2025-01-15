@@ -39,35 +39,20 @@ export const StarRating = ({ messageId, sessionId, aiMessage, userMessage, userI
     });
 
     try {
-      const { data, error } = await supabase.functions.invoke('get-api-token', {
-        body: { name: 'API_TOKEN' }
-      });
-
-      if (error) {
-        console.error('Error fetching API token:', error);
-        throw new Error('Failed to get API token');
-      }
-
-      const response = await fetch('https://bnb.gentlesand-b0965d81.westeurope.azurecontainerapps.io/feedback', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer testuser',
-          'X-API-Token': data.secret,
-        },
-        body: JSON.stringify({
+      const { error } = await supabase
+        .from('message_feedback')
+        .insert({
           user_id: userId,
           session_id: sessionId,
           user_message: userMessage || '',
           ai_message: aiMessage,
           rating: selectedRating,
           timestamp: new Date().toISOString()
-        }),
-      });
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to submit rating');
+      if (error) {
+        console.error('Error submitting rating:', error);
+        throw error;
       }
       
       toast({

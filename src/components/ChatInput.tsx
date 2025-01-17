@@ -50,12 +50,18 @@ export const ChatInput = ({ onSendMessage, onResponse, setIsTyping }: ChatInputP
       // Immediately show user message and pass it through
       onSendMessage(currentMessage);
       
-      const runId = crypto.randomUUID();
+      let runId = localStorage.getItem('runId');
+      if (!runId) {
+        runId = crypto.randomUUID();
+        localStorage.setItem('runId', runId);
+      }
       const response = await sendChatMessage(currentMessage, userId, runId);
       
       // Add AI response after it's received, passing the user's message
       onResponse(response.response, response.sources, runId, response.pdf_path);
       setMessage("");
+      // Store the runId in localStorage to persist across sessions
+      localStorage.setItem('runId', runId);
     } catch (error) {
       console.error('Error sending message:', error);
       toast({

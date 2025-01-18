@@ -4,7 +4,7 @@ import { MessageSquare, HelpCircle, Settings, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getChatSessions } from "@/services/chatService";
 import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 
 interface ChatSession {
   session_id: string;
@@ -14,12 +14,23 @@ interface ChatSession {
 interface ChatSidebarProps {
   onChatSelect?: (sessionId: string) => void;
   selectedChat?: string;
+  fetchChatSessions: (userId: string) => Promise<ChatSession[]>;
 }
 
-export const ChatSidebar = ({ onChatSelect, selectedChat }: ChatSidebarProps) => {
+export const ChatSidebar = ({ onChatSelect, selectedChat, fetchChatSessions }: ChatSidebarProps) => {
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
+  const [, forceUpdate] = useState({});  // Used to force re-render for time updates
   const { toast } = useToast();
+
+  // Update relative times every minute
+  useEffect(() => {
+    const interval = setInterval(() => {
+      forceUpdate({});
+    }, 60000); // Update every minute
+
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const fetchUserId = async () => {
@@ -27,27 +38,22 @@ export const ChatSidebar = ({ onChatSelect, selectedChat }: ChatSidebarProps) =>
       if (user) {
         console.log('Current user:', user.id);
         setUserId(user.id);
-        fetchChatSessions(user.id);
+        const sessions = await fetchChatSessions(user.id);
+        setChatSessions(sessions);
       }
     };
     fetchUserId();
-  }, []);
 
-  const fetchChatSessions = async (uid: string) => {
-    try {
-      console.log('Fetching chat sessions for user:', uid);
-      const sessions = await getChatSessions(uid);
-      console.log('Received chat sessions:', sessions);
-      setChatSessions(sessions);
-    } catch (error) {
-      console.error('Error fetching chat sessions:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load chat history",
-        variant: "destructive",
-      });
-    }
-  };
+    // Set up interval to refresh chat sessions
+    const refreshInterval = setInterval(async () => {
+      if (userId) {
+        const sessions = await fetchChatSessions(userId);
+        setChatSessions(sessions);
+      }
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(refreshInterval);
+  }, [userId, fetchChatSessions]);
 
   const handleNewConversation = () => {
     onChatSelect?.(undefined);
@@ -89,11 +95,16 @@ export const ChatSidebar = ({ onChatSelect, selectedChat }: ChatSidebarProps) =>
                 <Button
                   key={session.session_id}
                   variant={selectedChat === session.session_id ? "secondary" : "ghost"}
-                  className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground"
+                  className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground h-auto py-3"
                   onClick={() => onChatSelect?.(session.session_id)}
                 >
-                  <MessageSquare className="h-4 w-4" />
-                  Chat {format(new Date(session.created_at), 'MMM d, yyyy')}
+                  <MessageSquare className="h-4 w-4 shrink-0" />
+                  <div className="flex flex-col items-start min-w-0">
+                    <span className="truncate w-full">Chat {format(new Date(session.created_at), 'MMM d, yyyy')}</span>
+                    <span className="text-xs text-muted-foreground/80">
+                      {formatDistanceToNow(new Date(session.created_at), { addSuffix: true })}
+                    </span>
+                  </div>
                 </Button>
               ))}
               <Button 

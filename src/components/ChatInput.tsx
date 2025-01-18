@@ -22,9 +22,10 @@ interface ChatInputProps {
   onSendMessage: (message: string) => void;
   onResponse: (response: string, sources: Source[], runId: string, pdfPath: string | null) => void;
   setIsTyping: (isTyping: boolean) => void;
+  currentRunId: string; // Add currentRunId prop
 }
 
-export const ChatInput = ({ onSendMessage, onResponse, setIsTyping }: ChatInputProps) => {
+export const ChatInput = ({ onSendMessage, onResponse, setIsTyping, currentRunId }: ChatInputProps) => {
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
@@ -50,18 +51,11 @@ export const ChatInput = ({ onSendMessage, onResponse, setIsTyping }: ChatInputP
       // Immediately show user message and pass it through
       onSendMessage(currentMessage);
       
-      let runId = localStorage.getItem('runId');
-      if (!runId) {
-        runId = crypto.randomUUID();
-        localStorage.setItem('runId', runId);
-      }
-      const response = await sendChatMessage(currentMessage, userId, runId);
+      const response = await sendChatMessage(currentMessage, userId, currentRunId);
       
       // Add AI response after it's received, passing the user's message
-      onResponse(response.response, response.sources, runId, response.pdf_path);
+      onResponse(response.response, response.sources, currentRunId, response.pdf_path);
       setMessage("");
-      // Store the runId in localStorage to persist across sessions
-      localStorage.setItem('runId', runId);
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
@@ -79,7 +73,7 @@ export const ChatInput = ({ onSendMessage, onResponse, setIsTyping }: ChatInputP
     <form onSubmit={handleSubmit} className="flex gap-2 p-4 border-t border-border">
       <Input
         value={message}
-        onChange={(e) => setMessage(e.target.value)}
+        onChange={(e) => setMessage(e.target.value.trimStart())}
         placeholder="Enter Text"
         className="flex-1 bg-muted"
         disabled={isLoading || !userId}

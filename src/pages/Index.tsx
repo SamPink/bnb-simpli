@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { getChatHistory } from "@/services/chatService";
+import { getChatHistory, getChatSessions } from "@/services/chatService";
 import { useToast } from "@/hooks/use-toast";
 
 interface Source {
@@ -40,7 +40,7 @@ const WELCOME_MESSAGE: Message = {
            "• A file download feature is available for PDF documents containing the source of information.\n\n" +
            "Important: In this demo, some functionalities are disabled.",
   isUser: false,
-  messageId: 'welcome-message',
+  // Remove messageId to prevent star rating from showing
   runId: 'welcome'
 };
 
@@ -55,11 +55,11 @@ const Index = () => {
   const [currentRunId, setCurrentRunId] = useState<string>(() => {
     const storedRunId = localStorage.getItem('currentRunId');
     if (storedRunId && storedRunId !== 'welcome') {
-      console.log('Restoring previous conversation runId:', storedRunId);
+      console.log('[DEBUG] Restoring previous conversation runId:', storedRunId);
       return storedRunId;
     }
     const newRunId = crypto.randomUUID();
-    console.log('Creating new conversation runId:', newRunId);
+    console.log('[DEBUG] Creating new conversation runId:', newRunId);
     localStorage.setItem('currentRunId', newRunId);
     return newRunId;
   });
@@ -79,7 +79,7 @@ const Index = () => {
     if (!runId) {
       // Starting a new conversation
       const newRunId = crypto.randomUUID();
-      console.log('Starting new conversation with runId:', newRunId);
+      console.log('[DEBUG] Starting new conversation with runId:', newRunId);
       localStorage.setItem('currentRunId', newRunId);
       setCurrentRunId(newRunId);
       setMessages([WELCOME_MESSAGE]);
@@ -87,24 +87,44 @@ const Index = () => {
     }
     
     // Loading existing conversation
-    console.log('Loading existing conversation with runId:', runId);
+    console.log('[DEBUG] Loading existing conversation with runId:', runId);
     localStorage.setItem('currentRunId', runId);
     setCurrentRunId(runId);
     
     try {
       const history = await getChatHistory(runId, userId);
-      console.log('Received chat history:', history);
+      console.log('[DEBUG] Received chat history:', history);
       
-      const formattedMessages: Message[] = history.map((msg, index) => ({
-        content: msg.content,
-        isUser: msg.role === 'user',
-        sources: msg.sources,
-        userId: userId,
-        runId: runId, // Use the selected conversation's runId
-        pdfPath: msg.pdf_path || null,
-        messageId: `${runId}-${index}`,
-        previousMessage: index > 0 ? history[index - 1].content : undefined
-      }));
+      const formattedMessages: Message[] = history.map((msg, index) => {
+        console.log('[DEBUG] Formatting message:', msg);
+        console.log('[DEBUG] Raw history message:', {
+          msg,
+          role: msg.role,
+          hasSources: 'sources' in msg,
+          sourcesType: msg.sources ? typeof msg.sources : 'undefined',
+          rawSources: JSON.stringify(msg.sources)
+        });
+        
+        const formattedMessage = {
+          content: msg.content,
+          isUser: msg.role === 'user',
+          sources: msg.role === 'assistant' && msg.sources ? 
+            (Array.isArray(msg.sources) ? msg.sources : []) : 
+            [],
+          userId: userId,
+          runId: runId,
+          pdfPath: msg.role === 'assistant' ? msg.pdf_path : null,
+          messageId: `${runId}-${index}`,
+          previousMessage: index > 0 ? history[index - 1].content : undefined
+        };
+        
+        console.log('[DEBUG] Formatted message:', {
+          ...formattedMessage,
+          sourcesLength: formattedMessage.sources.length,
+          rawSources: JSON.stringify(formattedMessage.sources)
+        });
+      return formattedMessage;
+      });
       
       setMessages([WELCOME_MESSAGE, ...formattedMessages]);
     } catch (error) {
@@ -121,10 +141,10 @@ const Index = () => {
     if (!userId) return;
     
     const messageId = `${currentRunId}-${Date.now()}-user`;
-    console.log('Adding user message:', { messageId, runId: currentRunId });
+    console.log('[DEBUG] Adding user message:', { messageId, runId: currentRunId });
     
     setMessages(prev => [...prev, { 
-      content: userMessage, 
+      content: userMessage.trim(), 
       isUser: true,
       messageId,
       runId: currentRunId,
@@ -132,7 +152,24 @@ const Index = () => {
     }]);
   };
 
-  const handleAIResponse = (
+  const fetchChatSessions = async (uid: string) => {
+    try {
+      console.log('Fetching chat sessions for user:', uid);
+      const sessions = await getChatSessions(uid);
+      console.log('Received chat sessions:', sessions);
+      return sessions;
+    } catch (error) {
+      console.error('Error fetching chat sessions:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load chat history",
+        variant: "destructive",
+      });
+      return [];
+    }
+  };
+
+  const handleAIResponse = async (
     apiResponse: string, 
     sources: Source[] = [], 
     _runId: string, // Ignore the API's runId, use our currentRunId
@@ -143,7 +180,7 @@ const Index = () => {
     const messageId = `${currentRunId}-${Date.now()}-ai`;
     const previousMessage = messages[messages.length - 1]?.content;
     
-    console.log('Adding AI response:', { 
+    console.log('[DEBUG] Adding AI response:', { 
       messageId, 
       runId: currentRunId,
       hasPreviousMessage: !!previousMessage 
@@ -162,6 +199,11 @@ const Index = () => {
         previousMessage
       }
     ]);
+
+    // Refresh chat sessions after response
+    if (userId) {
+      await fetchChatSessions(userId);
+    }
   };
 
   const handleLogout = async () => {
@@ -174,6 +216,7 @@ const Index = () => {
       <ChatSidebar 
         onChatSelect={handleChatSelect}
         selectedChat={currentRunId}
+        fetchChatSessions={fetchChatSessions}
       />
       
       <div className="flex-1 flex flex-col">
@@ -207,6 +250,7 @@ const Index = () => {
           onSendMessage={handleUserMessage}
           onResponse={handleAIResponse}
           setIsTyping={setIsTyping}
+          currentRunId={currentRunId}
         />
       </div>
     </div>

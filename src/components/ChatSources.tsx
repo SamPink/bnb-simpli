@@ -24,7 +24,18 @@ interface ChatSourcesProps {
 
 export const ChatSources = ({ sources, userId, runId, pdfPath }: ChatSourcesProps) => {
   const { toast } = useToast();
-  console.log('ChatSources props:', { sources, userId, runId, pdfPath });
+  console.log('[DEBUG] ChatSources props:', { 
+    sources, 
+    userId, 
+    runId, 
+    pdfPath,
+    sourcesLength: sources?.length,
+    firstSource: sources?.[0],
+    hasValidSources: Array.isArray(sources) && sources.length > 0,
+    sourcesType: typeof sources,
+    isArray: Array.isArray(sources),
+    rawSources: JSON.stringify(sources)
+  });
 
   const handleDownloadPdf = async () => {
     if (!runId || !userId) {
@@ -68,13 +79,80 @@ export const ChatSources = ({ sources, userId, runId, pdfPath }: ChatSourcesProp
     }
   };
 
-  if (!sources.length) return null;
+  console.log('[DEBUG] ChatSources render:', {
+    sourcesProvided: !!sources,
+    sourcesType: typeof sources,
+    sourcesLength: sources?.length,
+    hasUserId: !!userId,
+    hasRunId: !!runId,
+    hasPdfPath: !!pdfPath
+  });
+
+  // Early return if no sources provided
+  if (!sources || !Array.isArray(sources) || sources.length === 0) {
+    console.log('[DEBUG] No valid sources to display');
+    return null;
+  }
+
+  // Validate and transform sources
+  const validSources = sources.reduce<Source[]>((acc, source) => {
+    if (!source || typeof source !== 'object') {
+      console.log('[DEBUG] Invalid source object:', source);
+      return acc;
+    }
+
+    try {
+      // Validate required properties
+      if (!('document' in source && 
+          'page' in source && 
+          'paragraph' in source && 
+          'text' in source)) {
+        console.log('[DEBUG] Source missing required properties:', source);
+        return acc;
+      }
+
+      // Ensure numeric values are valid
+      const page = Number(source.page);
+      const paragraph = Number(source.paragraph);
+      if (isNaN(page) || isNaN(paragraph)) {
+        console.log('[DEBUG] Invalid numeric values in source:', { page, paragraph });
+        return acc;
+      }
+
+      // Add validated source
+      acc.push({
+        ...source,
+        page,
+        paragraph,
+        text: String(source.text).trim(),
+        metadata: {
+          ...source.metadata,
+          size: Number(source.metadata?.size) || 0,
+          last_modified: source.metadata?.last_modified || new Date().toISOString(),
+          file_type: source.metadata?.file_type || 'pdf'
+        }
+      });
+    } catch (error) {
+      console.error('[DEBUG] Error processing source:', error);
+    }
+    return acc;
+  }, []);
+
+  if (validSources.length === 0) {
+    console.log('[DEBUG] No valid sources after processing');
+    return null;
+  }
+
+  console.log('[DEBUG] Rendering valid sources:', {
+    count: validSources.length,
+    firstSource: validSources[0]
+  });
 
   return (
     <div className="mt-4 space-y-4">
       <div className="text-sm font-medium text-muted-foreground">Sources:</div>
       <div className="space-y-2">
-        {sources.map((source, index) => (
+        {validSources.map((source, index) => (
           <div key={index} className="rounded-lg bg-muted p-3 text-sm">
             <div className="font-medium">{source.document}</div>
             <div className="text-muted-foreground">

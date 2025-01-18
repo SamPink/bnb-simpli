@@ -30,24 +30,26 @@ interface ChatSession {
   created_at: string;
 }
 
-const API_BASE_URL = 'https://bnb.gentlesand-b0965d81.westeurope.azurecontainerapps.io';
+const API_BASE_URL = '/api';
 
 const getApiHeaders = async () => {
-  const { data, error } = await supabase.functions.invoke('get-api-token', {
-    body: { name: 'API_TOKEN' }
-  });
-
-  if (error) {
-    console.error('Error fetching API token:', error);
-    throw new Error('Failed to get API token');
+  const apiKey = import.meta.env.VITE_API_KEY || import.meta.env.API_KEY;
+  if (!apiKey) {
+    throw new Error('API key not found in environment variables');
   }
-
-  return {
-    'accept': 'application/json',
+  
+  const headers = {
+    'Accept': 'application/json',
     'Content-Type': 'application/json',
-    'Authorization': 'Bearer testuser',
-    'X-API-Token': data.secret,
+    'X-API-Key': apiKey.trim()
   };
+
+  console.log('[DEBUG] API Headers:', {
+    ...headers,
+    'X-API-Key': headers['X-API-Key'].substring(0, 10) + '...' // Log partial key for security
+  });
+  
+  return headers;
 };
 
 export const sendChatMessage = async (message: string, userId: string, runId: string): Promise<ChatResponse> => {
@@ -56,7 +58,10 @@ export const sendChatMessage = async (message: string, userId: string, runId: st
   const headers = await getApiHeaders();
   const response = await fetch(`${API_BASE_URL}/chat`, {
     method: 'POST',
-    headers,
+    headers: {
+      ...headers,
+      'Origin': window.location.origin
+    },
     body: JSON.stringify({
       message,
       run_id: runId,
@@ -71,7 +76,19 @@ export const sendChatMessage = async (message: string, userId: string, runId: st
 
   const data = await response.json();
   console.log('Chat API response:', data);
-  return data;
+  
+  // API now returns sources directly in the expected format
+  console.log('[DEBUG] Processing API response:', {
+    responseLength: data.response.length,
+    sourcesCount: data.sources?.length || 0,
+    hasPdfPath: !!data.pdf_path
+  });
+
+  return {
+    response: data.response,
+    sources: data.sources || [],
+    pdf_path: data.pdf_path
+  };
 };
 
 export const getChatSessions = async (userId: string): Promise<ChatSession[]> => {
@@ -79,7 +96,10 @@ export const getChatSessions = async (userId: string): Promise<ChatSession[]> =>
   
   const headers = await getApiHeaders();
   const response = await fetch(`${API_BASE_URL}/chats?user_id=${userId}`, {
-    headers,
+    headers: {
+      ...headers,
+      'Origin': window.location.origin
+    },
   });
 
   if (!response.ok) {
@@ -97,7 +117,10 @@ export const getChatHistory = async (chatId: string, userId: string): Promise<Ch
   
   const headers = await getApiHeaders();
   const response = await fetch(`${API_BASE_URL}/chats/${chatId}?user_id=${userId}`, {
-    headers,
+    headers: {
+      ...headers,
+      'Origin': window.location.origin
+    },
   });
 
   if (!response.ok) {
@@ -106,8 +129,32 @@ export const getChatHistory = async (chatId: string, userId: string): Promise<Ch
   }
 
   const data = await response.json();
-  console.log('Chat history response:', data);
-  return data.history;
+  if (!data || !data.history || !Array.isArray(data.history)) {
+    console.error('Invalid chat history response:', data);
+    return [];
+  }
+
+  console.log('Chat history response:', {
+    raw: data,
+    history: data.history,
+    historyLength: data.history.length,
+    firstMessage: data.history[0] || null,
+  });
+  
+  // API now returns messages with sources directly in the expected format
+  return data.history.map((msg, index) => {
+    console.log(`[DEBUG] Processing history message ${index}:`, {
+      role: msg.role,
+      contentLength: msg.content.length,
+      sourcesCount: msg.sources?.length || 0,
+      hasPdfPath: !!msg.pdf_path
+    });
+
+    return {
+      ...msg,
+      sources: msg.sources || []
+    };
+  });
 };
 
 export const downloadPdf = async (userId: string, runId: string): Promise<Blob> => {
@@ -117,7 +164,8 @@ export const downloadPdf = async (userId: string, runId: string): Promise<Blob> 
   const response = await fetch(`${API_BASE_URL}/download_pdf?user_id=${userId}&run_id=${runId}`, {
     headers: {
       ...headers,
-      'Accept': 'application/pdf',  // Changed 'accept' to 'Accept'
+      'Accept': 'application/pdf',
+      'Origin': window.location.origin
     },
   });
 

@@ -33,7 +33,7 @@ interface ChatSession {
 const API_BASE_URL = '/api';
 
 const getApiHeaders = async () => {
-  const apiKey = import.meta.env.VITE_API_KEY || import.meta.env.API_KEY;
+  const apiKey = import.meta.env.VITE_API_KEY;
   if (!apiKey) {
     throw new Error('API key not found in environment variables');
   }

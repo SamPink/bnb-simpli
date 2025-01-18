@@ -1,9 +1,8 @@
 import { cn } from "@/lib/utils";
 import { ChatSources } from "./ChatSources";
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { marked } from 'marked';
+import hljs from 'highlight.js';
+import 'highlight.js/styles/github-dark.css';
 import { StarRating } from "./StarRating";
 
 interface Source {
@@ -79,66 +78,46 @@ export const ChatMessage = ({
       "mb-6"
     )}>
       <div className={cn(
-        "max-w-[85%] rounded-xl p-6",
+        "max-w-[85%] rounded-xl px-6 py-4",
         isUser 
           ? "bg-primary text-primary-foreground shadow-lg" 
           : "bg-card text-card-foreground border border-border shadow-sm",
       )}>
-        <ReactMarkdown 
+        <div 
           className={cn(
-            "prose prose-invert max-w-none",
-            "prose-h1:text-xl prose-h1:font-semibold prose-h1:mb-4",
-            "prose-h2:text-lg prose-h2:font-semibold prose-h2:mb-3 prose-h2:mt-4",
-            "prose-h3:text-base prose-h3:font-medium prose-h3:mb-2 prose-h3:mt-3",
-            "prose-p:my-2 prose-p:leading-relaxed",
-            "prose-ul:my-2 prose-ul:list-disc prose-ul:pl-4",
-            "prose-ol:my-2 prose-ol:list-decimal prose-ol:pl-4",
-            "prose-li:my-1 prose-li:pl-1",
-            "prose-strong:font-semibold",
-            "prose-code:bg-transparent prose-code:p-0 prose-code:text-sm",
-            "prose-pre:p-0 prose-pre:bg-transparent",
-            "prose-table:border-collapse prose-table:my-4",
-            "prose-th:border prose-th:border-border prose-th:p-2 prose-th:bg-muted/50",
-            "prose-td:border prose-td:border-border prose-td:p-2",
-            isUser ? "prose-strong:text-primary-foreground" : "prose-strong:text-foreground"
+            "text-base leading-7",
+            "space-y-4",
+            "[&_ul]:list-disc [&_ul]:pl-8 [&_ul]:space-y-2",
+            "[&_ol]:list-decimal [&_ol]:pl-8 [&_ol]:space-y-2",
+            "[&_li]:text-white",
+            "[&_p]:my-0",
+            "[&_pre]:p-4 [&_pre]:rounded-md [&_pre]:my-4 [&_pre]:overflow-auto",
+            "[&_code]:font-mono [&_code]:text-sm [&_code:not(:has(pre))]:bg-[#1E1E1E] [&_code:not(:has(pre))]:px-1.5 [&_code:not(:has(pre))]:py-0.5 [&_code:not(:has(pre))]:rounded",
+            "[&_table]:w-full [&_table]:my-4",
+            "[&_th]:text-left [&_th]:p-2 [&_th]:bg-[#1E1E1E]",
+            "[&_td]:p-2 [&_td]:border-t [&_td]:border-[#1E1E1E]"
           )}
-          remarkPlugins={[remarkGfm]}
-          components={{
-            code({inline, className, children, ...props}: {
-              inline?: boolean;
-              className?: string;
-              children: React.ReactNode;
-            }) {
-              const match = /language-(\w+)/.exec(className || '');
-              const language = match ? match[1] : '';
+          dangerouslySetInnerHTML={{ 
+            __html: (() => {
+              marked.setOptions({
+                gfm: true,
+                breaks: true
+              });
               
-              if (!inline && language) {
-                return (
-                  <SyntaxHighlighter
-                    language={language}
-                    style={vscDarkPlus}
-                    customStyle={{
-                      margin: '1em 0',
-                      borderRadius: '0.5rem',
-                      padding: '1em'
-                    }}
-                    {...props}
-                  >
-                    {String(children).replace(/\n$/, '')}
-                  </SyntaxHighlighter>
-                );
-              }
+              // Set up syntax highlighting
+              const renderer = new marked.Renderer();
+              renderer.code = ({ text, lang }) => {
+                const validLanguage = lang && hljs.getLanguage(lang);
+                const highlighted = validLanguage 
+                  ? hljs.highlight(text, { language: lang, ignoreIllegals: true }).value
+                  : hljs.highlightAuto(text).value;
+                return `<pre><code class="hljs ${lang || ''}">${highlighted}</code></pre>`;
+              };
               
-              return (
-                <code className="bg-muted/50 px-1.5 py-0.5 rounded text-sm" {...props}>
-                  {children}
-                </code>
-              );
-            }
+              return marked.parse(content, { renderer });
+            })()
           }}
-        >
-          {content}
-        </ReactMarkdown>
+        />
         
         {/* Render sources for AI messages if valid sources exist */}
         {!isUser && userId && (

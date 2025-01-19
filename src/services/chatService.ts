@@ -30,7 +30,7 @@ interface ChatSession {
   created_at: string;
 }
 
-const API_BASE_URL = '/api';
+const API_BASE_URL = 'https://bnb.gentlesand-b0965d81.westeurope.azurecontainerapps.io';
 
 const getApiHeaders = async () => {
   const apiKey = 'bnb_api_fserkjgsewnrupigiopvfghp9845ysut98guys93ur0945yu3ur0945yu4we90u509tuabuoiewjhgnriteugh';
@@ -59,9 +59,9 @@ export const sendChatMessage = async (message: string, userId: string, runId: st
   const response = await fetch(`${API_BASE_URL}/chat`, {
     method: 'POST',
     headers: {
-      ...headers,
-      'Origin': window.location.origin
+      ...headers
     },
+    mode: 'cors',
     body: JSON.stringify({
       message,
       run_id: runId,
@@ -96,10 +96,8 @@ export const getChatSessions = async (userId: string): Promise<ChatSession[]> =>
   
   const headers = await getApiHeaders();
   const response = await fetch(`${API_BASE_URL}/chats?user_id=${userId}`, {
-    headers: {
-      ...headers,
-      'Origin': window.location.origin
-    },
+    headers,
+    mode: 'cors',
   });
 
   if (!response.ok) {
@@ -117,10 +115,8 @@ export const getChatHistory = async (chatId: string, userId: string): Promise<Ch
   
   const headers = await getApiHeaders();
   const response = await fetch(`${API_BASE_URL}/chats/${chatId}?user_id=${userId}`, {
-    headers: {
-      ...headers,
-      'Origin': window.location.origin
-    },
+    headers,
+    mode: 'cors',
   });
 
   if (!response.ok) {
@@ -164,9 +160,9 @@ export const downloadPdf = async (userId: string, runId: string): Promise<Blob> 
   const response = await fetch(`${API_BASE_URL}/download_pdf?user_id=${userId}&run_id=${runId}`, {
     headers: {
       ...headers,
-      'Accept': 'application/pdf',
-      'Origin': window.location.origin
+      'Accept': 'application/pdf'
     },
+    mode: 'cors',
   });
 
   if (!response.ok) {

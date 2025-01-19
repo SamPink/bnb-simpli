@@ -30,7 +30,7 @@ interface ChatSession {
   created_at: string;
 }
 
-const API_BASE_URL = '/api';
+const API_BASE_URL = 'https://bnb.gentlesand-b0965d81.westeurope.azurecontainerapps.io';
 
 const getApiHeaders = async () => {
   const apiKey = 'bnb_api_fserkjgsewnrupigiopvfghp9845ysut98guys93ur0945yu3ur0945yu4we90u509tuabuoiewjhgnriteugh';

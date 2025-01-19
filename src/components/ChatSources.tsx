@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
-import { downloadPdf, downloadSourcePdf, validateSource } from "@/services/chatService";
+import { downloadSourcePdf, validateSource } from "@/services/chatService";
 import { useToast } from "@/hooks/use-toast";
 
 interface Source {
@@ -19,16 +19,14 @@ interface ChatSourcesProps {
   sources: Source[];
   userId: string;
   runId?: string;
-  pdfPath: string | null;
 }
 
-export const ChatSources = ({ sources, userId, runId, pdfPath }: ChatSourcesProps) => {
+export const ChatSources = ({ sources, userId, runId }: ChatSourcesProps) => {
   const { toast } = useToast();
   console.log('[DEBUG] ChatSources props:', { 
     sources, 
     userId, 
-    runId, 
-    pdfPath,
+    runId,
     sourcesLength: sources?.length,
     firstSource: sources?.[0],
     hasValidSources: Array.isArray(sources) && sources.length > 0,
@@ -79,55 +77,12 @@ export const ChatSources = ({ sources, userId, runId, pdfPath }: ChatSourcesProp
     }
   };
 
-  const handleDownloadAllPdf = async () => {
-    if (!runId || !userId) {
-      console.error('Missing required data for PDF download:', { runId, userId });
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Unable to download PDF. Missing required information.",
-      });
-      return;
-    }
-
-    try {
-      console.log('Attempting to download PDF:', { userId, runId });
-      const blob = await downloadPdf(userId, runId);
-      
-      if (!blob) {
-        throw new Error('No PDF data received');
-      }
-
-      const url = window.URL.createObjectURL(blob);
-      const a = window.document.createElement('a');
-      a.href = url;
-      a.download = `conversation-${runId}.pdf`;
-      window.document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      window.document.body.removeChild(a);
-      
-      toast({
-        title: "Success",
-        description: "PDF downloaded successfully",
-      });
-    } catch (error) {
-      console.error('Error downloading PDF:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to download PDF. Please try again.",
-      });
-    }
-  };
-
   console.log('[DEBUG] ChatSources render:', {
     sourcesProvided: !!sources,
     sourcesType: typeof sources,
     sourcesLength: sources?.length,
     hasUserId: !!userId,
-    hasRunId: !!runId,
-    hasPdfPath: !!pdfPath
+    hasRunId: !!runId
   });
 
   // Early return if no sources provided
@@ -212,17 +167,6 @@ export const ChatSources = ({ sources, userId, runId, pdfPath }: ChatSourcesProp
           </div>
         ))}
       </div>
-      {(pdfPath || sources.length > 0) && runId && (
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-2"
-          onClick={handleDownloadAllPdf}
-        >
-          <Download className="h-4 w-4" />
-          Download All Sources
-        </Button>
-      )}
     </div>
   );
 };

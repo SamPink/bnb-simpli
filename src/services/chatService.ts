@@ -150,27 +150,6 @@ export const getChatHistory = async (chatId: string, userId: string): Promise<Ch
   });
 };
 
-export const downloadPdf = async (userId: string, runId: string): Promise<Blob> => {
-  console.log('Downloading PDF:', { userId, runId });
-  
-  const headers = await getApiHeaders();
-  const response = await fetch(`${API_BASE_URL}/download_pdf?user_id=${userId}&run_id=${runId}`, {
-    headers: {
-      ...headers,
-      'Accept': 'application/pdf'
-    },
-  });
-
-  if (!response.ok) {
-    console.error('PDF download error:', response.status, response.statusText);
-    throw new Error('Failed to download PDF');
-  }
-
-  const blob = await response.blob();
-  console.log('PDF downloaded successfully, blob size:', blob.size);
-  return blob;
-};
-
 export const downloadSourcePdf = async (userId: string, runId: string, document: string): Promise<Blob> => {
   console.log('[DEBUG] Initiating source PDF download:', { 
     userId, 

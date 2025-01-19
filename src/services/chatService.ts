@@ -170,3 +170,79 @@ export const downloadPdf = async (userId: string, runId: string): Promise<Blob> 
   console.log('PDF downloaded successfully, blob size:', blob.size);
   return blob;
 };
+
+export const downloadSourcePdf = async (userId: string, runId: string, document: string): Promise<Blob> => {
+  console.log('[DEBUG] Initiating source PDF download:', { 
+    userId, 
+    runId, 
+    document,
+    encodedDocument: encodeURIComponent(document)
+  });
+  
+  const headers = await getApiHeaders();
+  const url = `${API_BASE_URL}/download_pdf?user_id=${userId}&run_id=${runId}&document=${encodeURIComponent(document)}`;
+  
+  console.log('[DEBUG] Making request to:', {
+    url,
+    headers: {
+      ...headers,
+      'X-API-Key': '(redacted)'
+    }
+  });
+
+  const response = await fetch(url, {
+    headers: {
+      ...headers,
+      'Accept': 'application/pdf'
+    },
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => 'No error details available');
+    console.error('[ERROR] Source PDF download failed:', {
+      status: response.status,
+      statusText: response.statusText,
+      errorDetails: errorText,
+      document
+    });
+    throw new Error(`Failed to download source PDF: ${response.statusText}`);
+  }
+
+  const blob = await response.blob();
+  console.log('[DEBUG] Source PDF downloaded successfully:', {
+    document,
+    blobSize: blob.size,
+    blobType: blob.type
+  });
+  
+  return blob;
+};
+
+// Helper function to consolidate source validation logic
+export const validateSource = (source: any): source is Source => {
+  if (!source || typeof source !== 'object') {
+    console.log('[DEBUG] Invalid source object:', source);
+    return false;
+  }
+
+  const requiredProps = ['document', 'page', 'paragraph', 'text'];
+  const hasAllProps = requiredProps.every(prop => prop in source);
+  
+  if (!hasAllProps) {
+    console.log('[DEBUG] Source missing required properties:', {
+      source,
+      missingProps: requiredProps.filter(prop => !(prop in source))
+    });
+    return false;
+  }
+
+  const page = Number(source.page);
+  const paragraph = Number(source.paragraph);
+  
+  if (isNaN(page) || isNaN(paragraph)) {
+    console.log('[DEBUG] Invalid numeric values in source:', { page, paragraph });
+    return false;
+  }
+
+  return true;
+};

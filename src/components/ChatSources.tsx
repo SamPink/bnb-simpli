@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
-import { downloadPdf } from "@/services/chatService";
+import { downloadPdf, downloadSourcePdf, validateSource } from "@/services/chatService";
 import { useToast } from "@/hooks/use-toast";
 
 interface Source {
@@ -37,7 +37,49 @@ export const ChatSources = ({ sources, userId, runId, pdfPath }: ChatSourcesProp
     rawSources: JSON.stringify(sources)
   });
 
-  const handleDownloadPdf = async () => {
+  const handleDownloadSourcePdf = async (document: string) => {
+    if (!runId || !userId) {
+      console.error('Missing required data for PDF download:', { runId, userId });
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Unable to download PDF. Missing required information.",
+      });
+      return;
+    }
+
+    try {
+      console.log('Attempting to download source PDF:', { userId, runId, document });
+      const blob = await downloadSourcePdf(userId, runId, document);
+      
+      if (!blob) {
+        throw new Error('No PDF data received');
+      }
+
+      const url = window.URL.createObjectURL(blob);
+      const a = window.document.createElement('a');
+      a.href = url;
+      a.download = `${document}_highlighted.pdf`;
+      window.document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      window.document.body.removeChild(a);
+      
+      toast({
+        title: "Success",
+        description: `${document} PDF downloaded successfully`,
+      });
+    } catch (error) {
+      console.error('Error downloading source PDF:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to download source PDF. Please try again.",
+      });
+    }
+  };
+
+  const handleDownloadAllPdf = async () => {
     if (!runId || !userId) {
       console.error('Missing required data for PDF download:', { runId, userId });
       toast({
@@ -57,13 +99,13 @@ export const ChatSources = ({ sources, userId, runId, pdfPath }: ChatSourcesProp
       }
 
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = window.document.createElement('a');
       a.href = url;
       a.download = `conversation-${runId}.pdf`;
-      document.body.appendChild(a);
+      window.document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      window.document.body.removeChild(a);
       
       toast({
         title: "Success",
@@ -94,49 +136,36 @@ export const ChatSources = ({ sources, userId, runId, pdfPath }: ChatSourcesProp
     return null;
   }
 
-  // Validate and transform sources
+  // Group and validate sources by document
   const validSources = sources.reduce<Source[]>((acc, source) => {
-    if (!source || typeof source !== 'object') {
-      console.log('[DEBUG] Invalid source object:', source);
-      return acc;
-    }
-
     try {
-      // Validate required properties
-      if (!('document' in source && 
-          'page' in source && 
-          'paragraph' in source && 
-          'text' in source)) {
-        console.log('[DEBUG] Source missing required properties:', source);
-        return acc;
+      if (validateSource(source)) {
+        // Add validated source with normalized data
+        acc.push({
+          ...source,
+          page: Number(source.page),
+          paragraph: Number(source.paragraph),
+          text: String(source.text).trim(),
+          metadata: {
+            ...source.metadata,
+            size: Number(source.metadata?.size) || 0,
+            last_modified: source.metadata?.last_modified || new Date().toISOString(),
+            file_type: source.metadata?.file_type || 'pdf'
+          }
+        });
       }
-
-      // Ensure numeric values are valid
-      const page = Number(source.page);
-      const paragraph = Number(source.paragraph);
-      if (isNaN(page) || isNaN(paragraph)) {
-        console.log('[DEBUG] Invalid numeric values in source:', { page, paragraph });
-        return acc;
-      }
-
-      // Add validated source
-      acc.push({
-        ...source,
-        page,
-        paragraph,
-        text: String(source.text).trim(),
-        metadata: {
-          ...source.metadata,
-          size: Number(source.metadata?.size) || 0,
-          last_modified: source.metadata?.last_modified || new Date().toISOString(),
-          file_type: source.metadata?.file_type || 'pdf'
-        }
-      });
     } catch (error) {
       console.error('[DEBUG] Error processing source:', error);
     }
     return acc;
   }, []);
+
+  // Sort sources by document name and page number
+  validSources.sort((a, b) => {
+    const docCompare = a.document.localeCompare(b.document);
+    if (docCompare !== 0) return docCompare;
+    return a.page - b.page;
+  });
 
   if (validSources.length === 0) {
     console.log('[DEBUG] No valid sources after processing');
@@ -154,11 +183,32 @@ export const ChatSources = ({ sources, userId, runId, pdfPath }: ChatSourcesProp
       <div className="space-y-2">
         {validSources.map((source, index) => (
           <div key={index} className="rounded-lg bg-muted p-3 text-sm">
-            <div className="font-medium">{source.document}</div>
-            <div className="text-muted-foreground">
-              Page {source.page}, Paragraph {source.paragraph}
+            <div className="flex justify-between items-start">
+              <div className="flex-1">
+                <div className="font-medium flex items-center justify-between">
+                  <span>{source.document}</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-1 ml-2"
+                    onClick={() => handleDownloadSourcePdf(source.document)}
+                    title={`Download highlighted PDF for ${source.document}`}
+                  >
+                    <Download className="h-3 w-3" />
+                    PDF
+                  </Button>
+                </div>
+                <div className="text-muted-foreground text-xs">
+                  Page {source.page}, Paragraph {source.paragraph}
+                  {source.metadata && (
+                    <span className="ml-2">
+                      ({(source.metadata.size / 1024).toFixed(1)} KB, Last modified: {new Date(source.metadata.last_modified).toLocaleDateString()})
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
-            <div className="mt-2">{source.text}</div>
+            <div className="mt-2 text-sm">{source.text}</div>
           </div>
         ))}
       </div>
@@ -167,10 +217,10 @@ export const ChatSources = ({ sources, userId, runId, pdfPath }: ChatSourcesProp
           variant="outline"
           size="sm"
           className="gap-2"
-          onClick={handleDownloadPdf}
+          onClick={handleDownloadAllPdf}
         >
           <Download className="h-4 w-4" />
-          Download PDF
+          Download All Sources
         </Button>
       )}
     </div>
